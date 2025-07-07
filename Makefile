@@ -22,4 +22,4 @@ check-uv:
 
 install: 
 	uv sync
-	uv run uv pip install openrlhf[vllm]
+	uv run uv pip install --no-build-isolation openrlhf[vllm]
