@@ -5,9 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11,<3.12"
 dependencies = [
-    "vllm>=0.9.1",
+    "vllm",
     "openai",
     "pydantic",
     "python-dotenv",
     "aiofiles",
+    "torch"
 ]
