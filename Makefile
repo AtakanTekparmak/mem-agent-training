@@ -21,5 +21,5 @@ check-uv:
 	fi
 
 install: 
-	uv sync;
-	uv pip install openrlhf[vllm]
+	uv sync
+	uv run uv pip install openrlhf[vllm]
