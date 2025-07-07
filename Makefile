@@ -20,6 +20,6 @@ check-uv:
 		uv --version; \
 	fi
 
-install: check-uv
+install: 
 	uv sync;
 	uv pip install openrlhf[vllm]
