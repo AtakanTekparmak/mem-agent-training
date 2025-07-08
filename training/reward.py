@@ -7,12 +7,12 @@ from pydantic import BaseModel
 from openai import OpenAI
 from dotenv import load_dotenv
 
+from training import OBSIDIAN_ROOT
+
 load_dotenv()
 
 # Constants
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-TRAINING_DIR = Path(__file__).parent.absolute()
-OBSIDIAN_ROOT = TRAINING_DIR.parent
 JUDGE_PROMPT_PATH = os.path.join(OBSIDIAN_ROOT, "training", "judge_prompt.txt")
 GPT_O3 = "o3-2025-04-16"
 DEBUG_DIR = os.path.join(OBSIDIAN_ROOT, "debug")
