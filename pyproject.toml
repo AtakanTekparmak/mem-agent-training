@@ -10,5 +10,6 @@ dependencies = [
     "pydantic",
     "python-dotenv",
     "aiofiles",
-    "torch"
+    "torch",
+    "wandb",
 ]
