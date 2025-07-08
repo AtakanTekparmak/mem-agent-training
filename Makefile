@@ -31,4 +31,5 @@ install:
 # Run the training script
 train:
 	@echo "Starting training..."
-	WANDB_API_KEY=$(WANDB_API_KEY) uv run ./train_agent.sh
+	chmod +x train_agent.sh
+	WANDB_API_KEY=$(WANDB_API_KEY) ./train_agent.sh
