@@ -11,3 +11,10 @@ wheels/
 
 # .env
 .env
+
+# debug
+debug/
+
+# uv.lock
+uv.lock
+*.lock
