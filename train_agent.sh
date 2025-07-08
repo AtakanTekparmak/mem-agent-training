@@ -42,6 +42,6 @@ uv run python -m openrlhf.cli.train_ppo_ray \
    --vllm_sync_backend nccl \
    --enforce_eager \
    --vllm_enable_sleep \
-   --deepspeed_enable_sleep \ 
-   --use_wandb True \ 
+   --deepspeed_enable_sleep \
+   --use_wandb \
    --wandb_project obsidian-retrieval-openrlhf
