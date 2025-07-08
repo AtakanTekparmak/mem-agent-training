@@ -20,12 +20,13 @@ DEBUG_JUDGE_DIR = os.path.join(DEBUG_DIR, "judge")
 os.makedirs(DEBUG_JUDGE_DIR, exist_ok=True)
 
 class JudgeResponse(BaseModel):
+    question: str
     reply: str
     ground_truth: str
     reasoning: str
     ground_truth_in_reply: bool
 
-def load_judge_prompt(reply: str, ground_truth: str) -> str:
+def load_judge_prompt(question: str, reply: str, ground_truth: str) -> str:
     """
     Load the judge prompt and replace the placeholders with the reply and ground truth.
     """
@@ -35,6 +36,7 @@ def load_judge_prompt(reply: str, ground_truth: str) -> str:
     except FileNotFoundError:
         raise FileNotFoundError(f"Judge prompt file not found at {JUDGE_PROMPT_PATH}")
     
+    judge_prompt = judge_prompt.replace("{{question}}", question)
     judge_prompt = judge_prompt.replace("{{reply}}", reply)
     judge_prompt = judge_prompt.replace("{{ground_truth}}", ground_truth)
     return judge_prompt
@@ -63,6 +65,7 @@ def get_model_response(schema: BaseModel, prompt: str, model: str) -> BaseModel:
     return response.output_parsed  
 
 def get_reward(
+        question: str,
         agent_reply: str,
         ground_truth: str,
         debug: bool = False
@@ -73,7 +76,7 @@ def get_reward(
     Returns:
         float: 1.0 if ground truth is present in reply, 0.0 otherwise
     """
-    judge_prompt = load_judge_prompt(agent_reply, ground_truth)
+    judge_prompt = load_judge_prompt(question, agent_reply, ground_truth)
     judge_response = get_model_response(
         schema=JudgeResponse,
         prompt=judge_prompt,

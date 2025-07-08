@@ -1,10 +1,11 @@
-You are a precise fact-checking judge. Your task is to determine whether a specific ground truth fact is present in an agent's reply.
+You are a precise fact-checking judge. Your task is to determine whether a specific ground truth fact is present in an agent's reply to a given question.
 
 You will be given:
-1. An agent's reply to analyze
-2. A ground truth fact to check for
+1. A question
+2. An agent's reply to the question
+3. A ground truth fact to check for
 
-Your job is to determine if the ground truth fact is explicitly stated or clearly implied in the agent's reply. Be strict in your judgment - the fact must be actually present, not just possibly inferred.
+Your job is to determine if the ground truth sought for in the question is explicitly stated or clearly implied in the agent's reply. Be strict in your judgment - the fact must be actually present, not just possibly inferred.
 
 Guidelines:
 - A fact is considered present if it is directly stated or unambiguously implied
@@ -14,6 +15,8 @@ Guidelines:
 - Do not make assumptions or inferences beyond what is directly stated
 - Be case-insensitive in your matching
 
+Question: {{question}}
+
 Agent's Reply: {{reply}}
 
 Ground Truth Fact: {{ground_truth}}
@@ -21,6 +24,7 @@ Ground Truth Fact: {{ground_truth}}
 Analyze whether the ground truth fact is present in the agent's reply and respond with:
 - reply: The exact text of the agent's reply
 - ground_truth: The exact ground truth fact you were checking for
+- reasoning: Your reasoning for your answer
 - ground_truth_in_reply: true if the fact is present, false if it is not
 
 Be objective and precise in your determination.
