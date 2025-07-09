@@ -74,12 +74,30 @@ class StaticMemory(BaseModel):
             # Check if user.md exists and remove it
             user_md_path = os.path.join(path, "user.md")
             if os.path.exists(user_md_path):
-                os.remove(user_md_path)
+                try:
+                    os.remove(user_md_path)
+                except Exception as e:
+                    print(f"Warning: Could not remove {user_md_path}: {e}")
             
-            # Check if entities directory exists and remove its contents and the directory
-            entities_dir = os.path.join(path, "entities")
-            if os.path.exists(entities_dir):
-                shutil.rmtree(entities_dir)
+            # Remove all entity files based on their paths
+            for entity in self.entities:
+                entity_file_path = os.path.join(path, entity.entity_file_path)
+                if os.path.exists(entity_file_path):
+                    try:
+                        os.remove(entity_file_path)
+                    except Exception as e:
+                        print(f"Warning: Could not remove {entity_file_path}: {e}")
+                
+                # Try to remove parent directories if they're empty
+                entity_dir = os.path.dirname(entity_file_path)
+                while entity_dir and entity_dir != path:
+                    try:
+                        if os.path.exists(entity_dir) and not os.listdir(entity_dir):
+                            os.rmdir(entity_dir)
+                        entity_dir = os.path.dirname(entity_dir)
+                    except Exception:
+                        # Directory not empty or other error, stop trying
+                        break
 
             # Call the instantiate method
             self.instantiate(path)
