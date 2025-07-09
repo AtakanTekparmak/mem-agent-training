@@ -1,5 +1,6 @@
 from typing import Dict, Any
 import os
+import threading
 
 from agent.utils import extract_reply, extract_python_code, format_results
 from agent.engine import execute_sandboxed_code
@@ -14,6 +15,10 @@ import torch
 step_idx = 0
 max_steps = 10
 
+# Process-level memory state tracking
+_memory_initialized = False
+_memory_lock = threading.Lock()
+
 # Constants
 STATIC_MEMORY_PATH = os.path.join(OBSIDIAN_ROOT, "data", "base_memory.json")
 MEMORY_PATH = os.path.join(OBSIDIAN_ROOT, "memory")
@@ -26,7 +31,20 @@ def load_static_memory(path: str = STATIC_MEMORY_PATH) -> StaticMemory:
         with open(path, "r") as f:
             return StaticMemory.model_validate_json(f.read())
     except FileNotFoundError:
-        return StaticMemory(user_md="")
+        return StaticMemory(user_md="", entities=[])
+
+def ensure_memory_initialized():
+    """
+    Ensure memory is initialized once per process to avoid conflicts.
+    """
+    global _memory_initialized
+    
+    with _memory_lock:
+        if not _memory_initialized:
+            static_memory = load_static_memory()
+            # Only instantiate, don't reset (which removes and recreates files)
+            static_memory.instantiate(MEMORY_PATH)
+            _memory_initialized = True
 
 async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     """
@@ -54,6 +72,12 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     reply = extract_reply(action)
     reward = torch.tensor(0)
     done = False
+    
+    # Initialize next_observation to handle all code paths
+    next_observation = (
+        observation + action +
+        "\n [ERROR] No valid python code or reply block found in response."
+    )
 
     if python_code and reply:
         next_observation = (
@@ -61,9 +85,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             "\n [ERROR] You cannot provide a <python> and a <reply> block at the same time."
         )
     elif python_code:
-        # Reset the static memory
-        static_memory = load_static_memory()
-        static_memory.reset(MEMORY_PATH)
+        # Ensure memory is initialized (only once per process)
+        ensure_memory_initialized()
 
         local_vars, error_msg = execute_sandboxed_code(
             code=python_code,
@@ -71,7 +94,7 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             import_module="agent.tools",
         )
 
-        next_observation   = (
+        next_observation = (
             observation + action +
             format_results(local_vars, error_msg) +
             ("\n<assistant>")
@@ -83,6 +106,7 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
         next_observation = (
             observation + action + "\n</s>"
         )
+    # If neither python_code nor reply, next_observation is already initialized above
 
     step_idx += 1
 

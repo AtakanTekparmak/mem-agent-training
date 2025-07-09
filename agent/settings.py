@@ -22,8 +22,8 @@ FILE_SIZE_LIMIT = 1024 * 1024  # 1MB
 DIR_SIZE_LIMIT = 1024 * 1024 * 10  # 10MB
 MEMORY_SIZE_LIMIT = 1024 * 1024 * 100  # 100MB
 
-# Engine
-SANDBOX_TIMEOUT = 20
+# Engine - Allow override for training environments
+SANDBOX_TIMEOUT = int(os.getenv("SANDBOX_TIMEOUT", "30"))  # Increased from 20 to 30 seconds default
 
 # Path settings
 SYSTEM_PROMPT_PATH = "agent/system_prompt.txt"

@@ -70,7 +70,7 @@ def create_dir(dir_path: str) -> bool:
 
 def write_to_file(file_path: str, diff: str) -> bool:
     """
-    Try to apply a unified git-style diff to `file_path`.
+    Try to apply a unified git-style diff to `file_path` with fallback for distributed environments.
 
     Parameters
     ----------
@@ -94,27 +94,54 @@ def write_to_file(file_path: str, diff: str) -> bool:
         patch_file = tmp.name
 
     try:
-        # 1. Dry-run check ─ will fail (non-zero return-code) on any conflict.
+        # 1. Check if git is available and working directory is reasonable
+        try:
+            check_git = subprocess.run(
+                ["git", "--version"],
+                cwd=workdir,
+                capture_output=True,
+                text=True,
+                timeout=5  # Quick timeout for git availability check
+            )
+            if check_git.returncode != 0:
+                return False
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            # Git not available or hanging, return False
+            return False
+
+        # 2. Dry-run check ─ will fail (non-zero return-code) on any conflict.
         check = subprocess.run(
             ["git", "apply", "--check", "--unsafe-paths", patch_file],
             cwd=workdir,
             capture_output=True,
             text=True,
+            timeout=10  # Reasonable timeout for git operations
         )
         if check.returncode != 0:
             # Optional: log or surface check.stderr for callers.
             return False
 
-        # 2. Real apply (no --check).
+        # 3. Real apply (no --check).
         apply = subprocess.run(
             ["git", "apply", "--unsafe-paths", patch_file],
             cwd=workdir,
             capture_output=True,
             text=True,
+            timeout=10  # Reasonable timeout for git operations
         )
         return apply.returncode == 0
+    except subprocess.TimeoutExpired:
+        # Git operations timed out, which can happen in distributed environments
+        return False
+    except Exception:
+        # Any other error (file not found, permission issues, etc.)
+        return False
     finally:
-        os.remove(patch_file)
+        # Clean up temp file
+        try:
+            os.remove(patch_file)
+        except Exception:
+            pass  # Don't fail the whole operation if cleanup fails
     
 def read_file(file_path: str) -> str:
     """

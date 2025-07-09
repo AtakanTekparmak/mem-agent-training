@@ -7,6 +7,15 @@ set -x
 export PATH="$(dirname "$0")/.venv/bin:$PATH"
 export NINJA="$(dirname "$0")/.venv/bin/ninja"
 
+# Set longer timeout for sandbox operations during training
+export SANDBOX_TIMEOUT=60
+
+# OpenRLHF optimizations for better distributed training stability
+export RAY_memory_usage_threshold=0.9  # Increase memory threshold for Ray OOM prevention
+export RAY_memory_monitor_refresh_ms=1000  # Enable memory monitoring with 1s refresh
+export VLLM_USE_RAY_COMPILED_DAG_CHANNEL_TYPE=auto
+export VLLM_USE_RAY_COMPILED_DAG_OVERLAP_COMM=False
+
 .venv/bin/python -m openrlhf.cli.train_ppo_ray \
    --ref_num_nodes 1 \
    --ref_num_gpus_per_node 8 \
@@ -15,7 +24,7 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --vllm_num_engines 4 \
    --vllm_tensor_parallel_size 2 \
    --colocate_all_models \
-   --vllm_gpu_memory_utilization 0.4 \
+   --vllm_gpu_memory_utilization 0.35 \
    --init_kl_coef 1e-3 \
    --gamma 1.0 \
    --use_kl_loss \
