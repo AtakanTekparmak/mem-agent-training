@@ -26,7 +26,7 @@ check-uv:
 
 install: 
 	uv sync
-	uv run uv pip install --no-build-isolation openrlhf[vllm]
+	uv pip install --no-build-isolation openrlhf[vllm]
 
 # Run the training script
 train:
