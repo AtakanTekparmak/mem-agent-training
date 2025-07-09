@@ -5,6 +5,7 @@ set -x
 # avoids issues where PyTorch cannot find the `ninja` executable when building
 # extensions.
 export PATH="$(dirname "$0")/.venv/bin:$PATH"
+export NINJA="$(dirname "$0")/.venv/bin/ninja"
 
 .venv/bin/python -m openrlhf.cli.train_ppo_ray \
    --ref_num_nodes 1 \
