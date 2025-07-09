@@ -1,6 +1,11 @@
 #!/bin/bash
 set -x
 
+# Ensure the virtual environment's binaries (such as ninja) are on PATH. This
+# avoids issues where PyTorch cannot find the `ninja` executable when building
+# extensions.
+export PATH="$(dirname "$0")/.venv/bin:$PATH"
+
 .venv/bin/python -m openrlhf.cli.train_ppo_ray \
    --ref_num_nodes 1 \
    --ref_num_gpus_per_node 8 \
