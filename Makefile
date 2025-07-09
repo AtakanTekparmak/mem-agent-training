@@ -25,6 +25,7 @@ check-uv:
 	fi
 
 install: 
+	sudo apt install ninja-build
 	uv sync
 	uv pip install --no-build-isolation openrlhf[vllm]
 	@echo "Checking if ninja is installed..."
