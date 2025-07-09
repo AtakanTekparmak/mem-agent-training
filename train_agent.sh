@@ -19,6 +19,7 @@ set -x
    --agent_func_path training/agent_func.py \
    --save_path training/ckpt/qwen3-14b-obsidian \
    --ckpt_path training/ckpt/qwen3-14b-obsidian \
+   --advantage_estimator reinforce \
    --save_hf_ckpt \
    --micro_train_batch_size 8 \
    --train_batch_size 64 \

@@ -12,4 +12,5 @@ dependencies = [
     "aiofiles",
     "torch",
     "wandb",
+    "ninja",
 ]
