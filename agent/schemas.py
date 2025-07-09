@@ -71,9 +71,15 @@ class StaticMemory(BaseModel):
         Reset the static memory inside the memory path.
         """
         try:
-            # Delete the memory directory
-            if os.path.exists(path):
-                shutil.rmtree(path)
+            # Check if user.md exists and remove it
+            user_md_path = os.path.join(path, "user.md")
+            if os.path.exists(user_md_path):
+                os.remove(user_md_path)
+            
+            # Check if entities directory exists and remove its contents and the directory
+            entities_dir = os.path.join(path, "entities")
+            if os.path.exists(entities_dir):
+                shutil.rmtree(entities_dir)
 
             # Call the instantiate method
             self.instantiate(path)
