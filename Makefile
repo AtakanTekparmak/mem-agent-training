@@ -27,6 +27,13 @@ check-uv:
 install: 
 	uv sync
 	uv pip install --no-build-isolation openrlhf[vllm]
+	@echo "Checking if ninja is installed..."
+	@if ! uv pip freeze | grep -q "^ninja=="; then \
+		echo "ninja not found. Installing ninja..."; \
+		uv pip install ninja; \
+	else \
+		echo "ninja is already installed"; \
+	fi
 
 # Run the training script
 train:
