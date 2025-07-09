@@ -1,7 +1,7 @@
 #!/bin/bash
 set -x
 
-uv run python -m openrlhf.cli.train_ppo_ray \
+.venv/bin/python -m openrlhf.cli.train_ppo_ray \
    --ref_num_nodes 1 \
    --ref_num_gpus_per_node 8 \
    --actor_num_nodes 1 \
@@ -43,5 +43,5 @@ uv run python -m openrlhf.cli.train_ppo_ray \
    --enforce_eager \
    --vllm_enable_sleep \
    --deepspeed_enable_sleep \
-   --use_wandb True\
+   --use_wandb True \
    --wandb_project obsidian-retrieval-openrlhf
