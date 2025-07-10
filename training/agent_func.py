@@ -27,6 +27,17 @@ def load_static_memory(path: str = STATIC_MEMORY_PATH) -> StaticMemory:
             return StaticMemory.model_validate_json(f.read())
     except FileNotFoundError:
         return StaticMemory(user_md="")
+    
+def ensure_memory_initialized():
+    """
+    Ensure memory is initialized once per process to avoid conflicts.
+    """
+    global _memory_initialized
+    if not _memory_initialized:
+        static_memory = load_static_memory()
+        static_memory.instantiate(MEMORY_PATH)
+
+        _memory_initialized = True
 
 async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     """
@@ -49,6 +60,9 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     global step_idx, max_steps
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
 
+    # Ensure the memory directory is set up once at the start of an episode
+    ensure_memory_initialized()
+
     # Extract the python code and reply
     python_code = extract_python_code(action)
     reply = extract_reply(action)
@@ -61,10 +75,6 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             "\n [ERROR] You cannot provide a <python> and a <reply> block at the same time."
         )
     elif python_code:
-        # Reset the static memory
-        static_memory = load_static_memory()
-        static_memory.reset(MEMORY_PATH)
-
         local_vars, error_msg = execute_sandboxed_code(
             code=python_code,
             allowed_path=MEMORY_PATH,
@@ -82,6 +92,13 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
 
         next_observation = (
             observation + action + "\n</s>"
+        )
+    else:
+        # Handle the case where the model output didn't contain a recognised
+        # block so that `next_observation` is always defined.
+        next_observation = (
+            observation + action +
+            "\n [ERROR] Missing <python> or <reply> block."
         )
 
     step_idx += 1
