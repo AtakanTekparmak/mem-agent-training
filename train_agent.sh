@@ -21,10 +21,10 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --use_kl_loss \
    --kl_estimator k3 \
    --advantage_estimator group_norm \
-   --pretrain Qwen/Qwen3-14B \
+   --pretrain Qwen/Qwen3-8B \
    --agent_func_path training/agent_func.py \
-   --save_path training/ckpt/qwen3-14b-obsidian \
-   --ckpt_path training/ckpt/qwen3-14b-obsidian \
+   --save_path training/ckpt/qwen3-8b-obsidian \
+   --ckpt_path training/ckpt/qwen3-8b-obsidian \
    --advantage_estimator reinforce \
    --save_hf_ckpt \
    --micro_train_batch_size 8 \
