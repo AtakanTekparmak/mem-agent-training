@@ -34,6 +34,21 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     global step_idx, max_steps
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
 
+    if step_idx >= max_steps:
+        done = True
+        next_observation = (
+            observation + action +
+            "\n [WARNING] You have reached the maximum number of steps."
+        )
+        return {
+            "rewards": torch.tensor(0),
+            "scores": torch.tensor(0),
+            "next_observation": next_observation,
+            "done": done,
+            "sampling_params": kwargs.get("sampling_params", None),
+            "extra_logs": {},
+        }
+
     # Extract the python code and reply
     python_code = extract_python_code(action)
     reply = extract_reply(action)
