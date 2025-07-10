@@ -36,6 +36,9 @@ install:
 		echo "ninja is already installed"; \
 	fi
 
+setup-memory:
+	uv run python setup_memory.py
+
 # Run the training script
 train:
 	@echo "Starting training..."

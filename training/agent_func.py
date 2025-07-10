@@ -3,9 +3,8 @@ import os
 
 from agent.utils import extract_reply, extract_python_code, format_results
 from agent.engine import execute_sandboxed_code
-from agent.schemas import StaticMemory
 
-from training import OBSIDIAN_ROOT
+from training import MEMORY_PATH
 from training.reward import get_reward
 
 import torch
@@ -13,31 +12,6 @@ import torch
 # Global states for the environment
 step_idx = 0
 max_steps = 10
-
-# Constants
-STATIC_MEMORY_PATH = os.path.join(OBSIDIAN_ROOT, "data", "base_memory.json")
-MEMORY_PATH = os.path.join(OBSIDIAN_ROOT, "memory")
-
-def load_static_memory(path: str = STATIC_MEMORY_PATH) -> StaticMemory:
-    """
-    Load the static memory from the given path.
-    """
-    try:
-        with open(path, "r") as f:
-            return StaticMemory.model_validate_json(f.read())
-    except FileNotFoundError:
-        return StaticMemory(user_md="")
-    
-def ensure_memory_initialized():
-    """
-    Ensure memory is initialized once per process to avoid conflicts.
-    """
-    global _memory_initialized
-    if not _memory_initialized:
-        static_memory = load_static_memory()
-        static_memory.instantiate(MEMORY_PATH)
-
-        _memory_initialized = True
 
 async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     """
@@ -59,9 +33,6 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     """
     global step_idx, max_steps
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
-
-    # Ensure the memory directory is set up once at the start of an episode
-    ensure_memory_initialized()
 
     # Extract the python code and reply
     python_code = extract_python_code(action)
