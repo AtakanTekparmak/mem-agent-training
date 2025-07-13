@@ -1,5 +1,6 @@
 from typing import Dict, Any
 import os
+import json
 
 from agent.utils import extract_reply, extract_python_code, format_results
 from agent.engine import execute_sandboxed_code
@@ -33,6 +34,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     """
     global step_idx, max_steps
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
+
+    label = json.loads(label)
 
     if step_idx >= max_steps:
         done = True
