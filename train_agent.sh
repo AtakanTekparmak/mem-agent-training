@@ -10,7 +10,7 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --actor_num_gpus_per_node 8 \
    --vllm_num_engines 2 \
    --vllm_tensor_parallel_size 4 \
-   --vllm_gpu_memory_utilization 0.15 \
+   --vllm_gpu_memory_utilization 0.20 \
    --colocate_all_models \
    --init_kl_coef 1e-3 \
    --gamma 1.0 \
