@@ -18,8 +18,8 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --kl_estimator k3 \
    --pretrain Qwen/Qwen3-4B \
    --agent_func_path training/agent_func.py \
-   --save_path training/ckpt/qwen3-4b-obsidian \
-   --ckpt_path training/ckpt/qwen3-4b-obsidian \
+   --save_path training/ckpt/qwen3-4b-obsidian-2e-7-2e-6 \
+   --ckpt_path training/ckpt/qwen3-4b-obsidian-2e-7-2e-6 \
    --advantage_estimator reinforce \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
