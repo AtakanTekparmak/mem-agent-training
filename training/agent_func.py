@@ -4,7 +4,7 @@ import os
 from agent.utils import extract_reply, extract_python_code, format_results
 from agent.engine import execute_sandboxed_code
 
-from training import MEMORY_PATH
+from training import GRONINGEN_MEMORY_PATH, BERLIN_MEMORY_PATH
 from training.reward import get_reward
 
 import torch
@@ -63,9 +63,16 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             "\n [ERROR] You cannot provide a <python> and a <reply> block at the same time."
         )
     elif python_code_exists:
+        mem_id = label["mem_id"]
+        memory_path = None
+        if "groningen" in mem_id:
+            memory_path = GRONINGEN_MEMORY_PATH
+        elif "berlin" in mem_id:
+            memory_path = BERLIN_MEMORY_PATH
+
         local_vars, error_msg = execute_sandboxed_code(
             code=python_code,
-            allowed_path=MEMORY_PATH,
+            allowed_path=memory_path,
             import_module="agent.tools",
         )
 
@@ -75,7 +82,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             ("\n<assistant>")
         )
     elif reply_exists:
-        reward = torch.tensor(get_reward(observation, reply, label))
+        ground_truth = label["answer"]
+        reward = torch.tensor(get_reward(observation, reply, ground_truth))
         done = True
 
         next_observation = (
