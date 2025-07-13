@@ -18,8 +18,8 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --kl_estimator k3 \
    --pretrain Qwen/Qwen3-4B \
    --agent_func_path training/agent_func.py \
-   --save_path training/ckpt/qwen3-4b-obsidian-2e-7-2e-6 \
-   --ckpt_path training/ckpt/qwen3-4b-obsidian-2e-7-2e-6 \
+   --save_path training/ckpt/qwen3-4b-obsidian-1e-7-1e-6 \
+   --ckpt_path training/ckpt/qwen3-4b-obsidian-1e-7-1e-6 \
    --advantage_estimator reinforce \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
@@ -33,8 +33,8 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --generate_max_len 4096 \
    --zero_stage 3 \
    --bf16 \
-   --actor_learning_rate 2e-7 \
-   --critic_learning_rate 2e-6 \
+   --actor_learning_rate 1e-7 \
+   --critic_learning_rate 1e-6 \
    --prompt_data json@data/openrlhf \
    --input_key context_messages \
    --apply_chat_template \
