@@ -52,15 +52,17 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     # Extract the python code and reply
     python_code = extract_python_code(action)
     reply = extract_reply(action)
+    python_code_exists = len(python_code) > 0
+    reply_exists = len(reply) > 0
     reward = torch.tensor(0)
     done = False
 
-    if python_code and reply:
+    if python_code_exists and reply_exists:
         next_observation = (
             observation + action + 
             "\n [ERROR] You cannot provide a <python> and a <reply> block at the same time."
         )
-    elif python_code:
+    elif python_code_exists:
         local_vars, error_msg = execute_sandboxed_code(
             code=python_code,
             allowed_path=MEMORY_PATH,
@@ -72,7 +74,7 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             format_results(local_vars, error_msg) +
             ("\n<assistant>")
         )
-    elif reply:
+    elif reply_exists:
         reward = torch.tensor(get_reward(observation, reply, label))
         done = True
 

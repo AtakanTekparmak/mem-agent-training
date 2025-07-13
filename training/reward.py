@@ -53,16 +53,19 @@ def get_model_response(schema: BaseModel, prompt: str, model: str) -> BaseModel:
     Returns:
         The structured response
     """
-    client = OpenAI(api_key=OPENAI_API_KEY)
-    response = client.responses.parse(
-        model=model,
-        input=[
-            {"role": "user", "content": prompt}
-        ],
-        text_format=schema
-    )
-
-    return response.output_parsed  
+    try:
+        client = OpenAI(api_key=OPENAI_API_KEY)
+        response = client.responses.parse(
+            model=model,
+            input=[
+                {"role": "user", "content": prompt}
+            ],
+            text_format=schema
+        )
+        return response.output_parsed 
+    except:
+        print("OpenAI call failed")
+        return None
 
 def get_reward(
         question: str,
@@ -91,5 +94,7 @@ def get_reward(
                 json.dump(judge_response.model_dump(), f)
         except Exception as e:
             print(f"Error saving debug file: {e}")
-
+            
+    if judge_response is None:
+        return 0.0
     return 1.0 if judge_response.ground_truth_in_reply else 0.0
