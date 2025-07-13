@@ -5,12 +5,12 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
 
 .venv/bin/python -m openrlhf.cli.train_ppo_ray \
    --ref_num_nodes 1 \
-   --ref_num_gpus_per_node 4 \
+   --ref_num_gpus_per_node 8 \              
    --actor_num_nodes 1 \
-   --actor_num_gpus_per_node 4 \
-   --vllm_num_engines 2 \
-   --vllm_tensor_parallel_size 2 \
-   --vllm_gpu_memory_utilization 0.3 \
+   --actor_num_gpus_per_node 8 \             
+   --vllm_num_engines 2 \                   
+   --vllm_tensor_parallel_size 4 \
+   --vllm_gpu_memory_utilization 0.25 \
    --colocate_all_models \
    --init_kl_coef 1e-3 \
    --gamma 1.0 \
