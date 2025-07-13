@@ -33,8 +33,8 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --generate_max_len 4096 \
    --zero_stage 3 \
    --bf16 \
-   --actor_learning_rate 4e-7 \
-   --critic_learning_rate 5e-6 \
+   --actor_learning_rate 2e-7 \
+   --critic_learning_rate 2e-6 \
    --prompt_data json@data/openrlhf \
    --input_key context_messages \
    --apply_chat_template \
