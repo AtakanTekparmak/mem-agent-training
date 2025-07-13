@@ -60,7 +60,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     if python_code_exists and reply_exists:
         next_observation = (
             observation + action + 
-            "\n [ERROR] You cannot provide a <python> and a <reply> block at the same time."
+            "\n [ERROR] You cannot provide a <python> and a <reply> block at the same time." +
+            "\n<assistant>"
         )
     elif python_code_exists:
         local_vars, error_msg = execute_sandboxed_code(
@@ -86,7 +87,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
         # block so that `next_observation` is always defined.
         next_observation = (
             observation + action +
-            "\n [ERROR] Missing <python> or <reply> block."
+            "\n [ERROR] Missing <python> or <reply> block." +
+            "\n<assistant>"
         )
 
     step_idx += 1
