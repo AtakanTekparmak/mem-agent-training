@@ -326,3 +326,7 @@ def _subprocess_entry() -> None:
         params.get("log", False),
     )
     sys.stdout.buffer.write(pickle.dumps((locals_dict, error)))
+
+
+if __name__ == "__main__":
+    _subprocess_entry()
