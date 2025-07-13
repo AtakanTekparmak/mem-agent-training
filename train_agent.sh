@@ -27,14 +27,14 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --micro_rollout_batch_size 2 \
    --rollout_batch_size 16 \
    --n_samples_per_prompt 4 \
-   --max_epochs 100 \
+   --max_epochs 50 \
    --prompt_max_len 4096 \
    --max_samples 100000 \
    --generate_max_len 4096 \
    --zero_stage 3 \
    --bf16 \
-   --actor_learning_rate 5e-7 \
-   --critic_learning_rate 9e-6 \
+   --actor_learning_rate 4e-7 \
+   --critic_learning_rate 5e-6 \
    --prompt_data json@data/openrlhf \
    --input_key context_messages \
    --apply_chat_template \
