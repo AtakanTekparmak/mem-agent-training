@@ -35,11 +35,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     global step_idx, max_steps
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
 
-    # Write the label to a file
-    with open("label.txt", "w") as f:
-        f.write(label)
-    with open("label_type.txt", "w") as f:
-        f.write(type(label))
+    # Load the json string to a dict
+    label = json.loads(label)
 
     if step_idx >= max_steps:
         done = True

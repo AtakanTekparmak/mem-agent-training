@@ -28,16 +28,17 @@ def main():
                 iterator = [questions]
 
             for q in iterator:
+                label_dict = {
+                    "task": "retrieval",
+                    "answer": example["answer"],
+                    "mem_id": "berlin-1"
+                }
                 record = {
                     "context_messages": [
                         {"role": "system", "content": sys_prompt},
                         {"role": "user",   "content": q}
                     ],
-                    "label": {
-                        "task": "retrieval",
-                        "answer": example["answer"],
-                        "mem_id": "berlin-1"
-                    }
+                    "label": json.dumps(label_dict)
                 }
                 fh.write(json.dumps(record, ensure_ascii=False) + "\n")
 
