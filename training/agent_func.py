@@ -1,6 +1,7 @@
 from typing import Dict, Any
 import os
 import json
+import base64
 
 from agent.utils import extract_reply, extract_python_code, format_results
 from agent.engine import execute_sandboxed_code
@@ -35,10 +36,11 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     global step_idx, max_steps
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
 
-    # Load the json string to a dict
+    # Decode the base64 string to get the JSON string, then parse to dict
     print(f"label: {label}")
     print(f"type(label): {type(label)}")
-    label = json.loads(label)
+    label_json = base64.b64decode(label).decode('utf-8')
+    label = json.loads(label_json)
 
     if step_idx >= max_steps:
         done = True
