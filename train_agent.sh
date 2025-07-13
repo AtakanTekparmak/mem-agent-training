@@ -10,16 +10,16 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --actor_num_gpus_per_node 8 \
    --vllm_num_engines 2 \
    --vllm_tensor_parallel_size 4 \
-   --vllm_gpu_memory_utilization 0.25 \
+   --vllm_gpu_memory_utilization 0.15 \
    --colocate_all_models \
    --init_kl_coef 1e-3 \
    --gamma 1.0 \
    --use_kl_loss \
    --kl_estimator k3 \
-   --pretrain Qwen/Qwen3-4B \
+   --pretrain Qwen/Qwen3-8B \
    --agent_func_path training/agent_func.py \
-   --save_path training/ckpt/qwen3-4b-obsidian-3e-7-3e-6 \
-   --ckpt_path training/ckpt/qwen3-4b-obsidian-3e-7-3e-6 \
+   --save_path training/ckpt/qwen3-8b-obsidian-3e-7-3e-6 \
+   --ckpt_path training/ckpt/qwen3-8b-obsidian-3e-7-3e-6 \
    --advantage_estimator reinforce \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
