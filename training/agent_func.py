@@ -52,8 +52,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     # Extract the python code and reply
     python_code = extract_python_code(action)
     reply = extract_reply(action)
-    python_code_exists = len(python_code) > 0
-    reply_exists = len(reply) > 0
+    python_code_exists = len(python_code.strip()) > 0
+    reply_exists = len(reply.strip()) > 0
     reward = torch.tensor(0)
     done = False
 
