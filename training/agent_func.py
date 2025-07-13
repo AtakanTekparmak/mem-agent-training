@@ -36,6 +36,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
 
     # Load the json string to a dict
+    print(f"label: {label}")
+    print(f"type(label): {type(label)}")
     label = json.loads(label)
 
     if step_idx >= max_steps:
