@@ -18,8 +18,8 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --kl_estimator k3 \
    --pretrain Qwen/Qwen3-8B \
    --agent_func_path training/agent_func.py \
-   --save_path training/ckpt/qwen3-8b-obsidian-2e-7-2e-6 \
-   --ckpt_path training/ckpt/qwen3-8b-obsidian-2e-7-2e-6 \
+   --save_path training/ckpt/qwen3-8b-obsidian-2e-7-2e-6-30epochs \
+   --ckpt_path training/ckpt/qwen3-8b-obsidian-2e-7-2e-6-30epochs \
    --advantage_estimator reinforce \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
@@ -27,7 +27,7 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --micro_rollout_batch_size 2 \
    --rollout_batch_size 16 \
    --n_samples_per_prompt 4 \
-   --max_epochs 50 \
+   --max_epochs 30 \
    --prompt_max_len 4096 \
    --max_samples 100000 \
    --generate_max_len 4096 \
