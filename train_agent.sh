@@ -18,8 +18,8 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --kl_estimator k3 \
    --pretrain Qwen/Qwen3-8B \
    --agent_func_path training/agent_func.py \
-   --save_path training/ckpt/qwen3-8b-obsidian-2e-7-2e-6-30epochs \
-   --ckpt_path training/ckpt/qwen3-8b-obsidian-2e-7-2e-6-30epochs \
+   --save_path training/ckpt/qwen3-8b-obsidian-2e-7-2e-6-30epochs-5episodes \
+   --ckpt_path training/ckpt/qwen3-8b-obsidian-2e-7-2e-6-30epochs-5episodes \
    --advantage_estimator reinforce \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
@@ -46,5 +46,7 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --vllm_enable_sleep \
    --deepspeed_enable_sleep \
    --use_wandb True \
+   --num_episodes 5 \
+   --save_steps 2 \
    --packing_samples --flash_attn \
    --wandb_project obsidian-retrieval-openrlhf
