@@ -12,15 +12,18 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --vllm_tensor_parallel_size 4 \
    --vllm_gpu_memory_utilization 0.20 \
    --colocate_all_models \
-   --init_kl_coef 0.005 \
+   --init_kl_coef 0.025 \
+   --kl_target 0.10 \
+   --ptx_coef 0.05 \
+   --kl_horizon 500 \
    --gamma 1.0 \
    --use_kl_loss \
    --kl_estimator k3 \
    --pretrain Qwen/Qwen3-8B \
    --agent_func_path training/agent_func.py \
-   --save_path training/ckpt/qwen3-8b-obsidian-1e-7-1e-6-30epochs-3episodes \
-   --ckpt_path training/ckpt/qwen3-8b-obsidian-1e-7-1e-6-30epochs-3episodes \
-   --advantage_estimator reinforce \
+   --save_path training/ckpt/qwen3-8b-obsidian-1e-7-5e-7-30epochs-4episodes \
+   --ckpt_path training/ckpt/qwen3-8b-obsidian-1e-7-5e-7-30epochs-4episodes \
+   --advantage_estimator rloo \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
    --train_batch_size 16 \
@@ -34,7 +37,7 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --zero_stage 3 \
    --bf16 \
    --actor_learning_rate 1e-7 \
-   --critic_learning_rate 1e-6 \
+   --critic_learning_rate 5e-7 \
    --prompt_data json@data/openrlhf \
    --input_key context_messages \
    --apply_chat_template \
@@ -46,7 +49,7 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --vllm_enable_sleep \
    --deepspeed_enable_sleep \
    --use_wandb True \
-   --num_episodes 3 \
-   --save_steps 2 \
+   --num_episodes 4 \
+   --save_steps 1 \
    --packing_samples --flash_attn \
    --wandb_project obsidian-retrieval-openrlhf
