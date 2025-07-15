@@ -12,7 +12,7 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --vllm_tensor_parallel_size 4 \
    --vllm_gpu_memory_utilization 0.20 \
    --colocate_all_models \
-   --init_kl_coef 1e-3 \
+   --init_kl_coef 0.015 \
    --gamma 1.0 \
    --use_kl_loss \
    --kl_estimator k3 \
