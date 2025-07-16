@@ -32,13 +32,17 @@ def extract_question(observation: str) -> str:
     Returns:
         str: The question
     """
-    if "\nuser\n" in observation:
-        if "\nassistant" in observation:
-            return observation.split("\nuser\n")[1].split("\nassistant\n")[0]
+    if "<|im_start|>user" in observation:
+        if "<|im_start|>assistant" in observation:
+            extracted_question = observation.split("<|im_start|>user")[1].split("<|im_start|>assistant")[0].strip()
+            if "<|im_end|>" in extracted_question:
+                return extracted_question.split("<|im_end|>")[0].strip()
+            else:
+                return extracted_question
         else:
             raise ValueError("Trying to get question from observation but no assistant block found")
     else:
-        raise ValueError(f"Observation does not contain a question:\n {observation}")
+        raise ValueError(f"Observation does not contain a question")
 
 async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     """
