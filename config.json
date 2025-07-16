@@ -9,6 +9,7 @@
     "max_epochs": 30,
     "actor_learning_rate": "1e-6",
     "critic_learning_rate": "5e-6",
-    "num_episodes": 4
+    "num_episodes": 4,
+    "thoughts_min_length": 784
   }
 } 
