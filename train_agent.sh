@@ -3,6 +3,54 @@ set -x
 export PATH="$(dirname "$0")/.venv/bin:$PATH"
 export NINJA="$(dirname "$0")/.venv/bin/ninja"
 
+# Read config from JSON file
+CONFIG_FILE="$(dirname "$0")/config.json"
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "Config file not found: $CONFIG_FILE"
+    exit 1
+fi
+
+# Parse JSON config using Python
+CONFIG_VALUES=$(python3 -c "
+import json
+import sys
+import os
+
+config_file = '$CONFIG_FILE'
+with open(config_file, 'r') as f:
+    config = json.load(f)
+
+# Extract hyperparameters
+hp = config['hyperparameters']
+model_name = config['model']['name']
+
+# Extract model identifier (e.g., 'Qwen/Qwen3-8B' -> 'qwen3-8b')
+model_id = model_name.split('/')[-1].lower().replace('-', '-')
+
+# Construct dynamic path
+path_suffix = f\"{model_id}-obsidian-{hp['actor_learning_rate']}-{hp['critic_learning_rate']}-{hp['max_epochs']}epochs-{hp['num_episodes']}episodes\"
+
+# Output all values as shell variables
+print(f'MODEL_NAME=\"{model_name}\"')
+print(f'INIT_KL_COEF={hp[\"init_kl_coef\"]}')
+print(f'KL_TARGET={hp[\"kl_target\"]}')
+print(f'KL_HORIZON={hp[\"kl_horizon\"]}')
+print(f'MAX_EPOCHS={hp[\"max_epochs\"]}')
+print(f'ACTOR_LR={hp[\"actor_learning_rate\"]}')
+print(f'CRITIC_LR={hp[\"critic_learning_rate\"]}')
+print(f'NUM_EPISODES={hp[\"num_episodes\"]}')
+print(f'SAVE_PATH=\"training/ckpt/{path_suffix}\"')
+print(f'CKPT_PATH=\"training/ckpt/{path_suffix}\"')
+")
+
+# Evaluate the config values as shell variables
+eval "$CONFIG_VALUES"
+
+echo "Loaded configuration:"
+echo "  Model: $MODEL_NAME"
+echo "  Save/Checkpoint Path: $SAVE_PATH"
+echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_epochs=$MAX_EPOCHS, etc."
+
 .venv/bin/python -m openrlhf.cli.train_ppo_ray \
    --ref_num_nodes 1 \
    --ref_num_gpus_per_node 8 \
@@ -12,16 +60,16 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --vllm_tensor_parallel_size 4 \
    --vllm_gpu_memory_utilization 0.20 \
    --colocate_all_models \
-   --init_kl_coef 0.04 \
-   --kl_target 0.07 \
-   --kl_horizon 2000 \
+   --init_kl_coef $INIT_KL_COEF \
+   --kl_target $KL_TARGET \
+   --kl_horizon $KL_HORIZON \
    --gamma 1.0 \
    --use_kl_loss \
    --kl_estimator k3 \
-   --pretrain Qwen/Qwen3-8B \
+   --pretrain $MODEL_NAME \
    --agent_func_path training/agent_func.py \
-   --save_path training/ckpt/qwen3-8b-obsidian-1e-6-5e-6-30epochs-4episodes \
-   --ckpt_path training/ckpt/qwen3-8b-obsidian-1e-6-5e-6-30epochs-4episodes \
+   --save_path $SAVE_PATH \
+   --ckpt_path $CKPT_PATH \
    --advantage_estimator reinforce \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
@@ -29,14 +77,14 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --micro_rollout_batch_size 2 \
    --rollout_batch_size 16 \
    --n_samples_per_prompt 4 \
-   --max_epochs 30 \
+   --max_epochs $MAX_EPOCHS \
    --prompt_max_len 4096 \
    --max_samples 100000 \
    --generate_max_len 4096 \
    --zero_stage 3 \
    --bf16 \
-   --actor_learning_rate 1e-6 \
-   --critic_learning_rate 5e-6 \
+   --actor_learning_rate $ACTOR_LR \
+   --critic_learning_rate $CRITIC_LR \
    --prompt_data json@data/openrlhf \
    --input_key context_messages \
    --apply_chat_template \
@@ -48,7 +96,7 @@ export NINJA="$(dirname "$0")/.venv/bin/ninja"
    --vllm_enable_sleep \
    --deepspeed_enable_sleep \
    --use_wandb True \
-   --num_episodes 4 \
+   --num_episodes $NUM_EPISODES \
    --save_steps 1 \
    --packing_samples --flash_attn \
    --wandb_project obsidian-retrieval-openrlhf

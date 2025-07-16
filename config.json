@@ -1,0 +1,14 @@
+{
+  "model": {
+    "name": "Qwen/Qwen3-8B"
+  },
+  "hyperparameters": {
+    "init_kl_coef": 0.04,
+    "kl_target": 0.07,
+    "kl_horizon": 2000,
+    "max_epochs": 30,
+    "actor_learning_rate": "1e-6",
+    "critic_learning_rate": "5e-6",
+    "num_episodes": 4
+  }
+} 
