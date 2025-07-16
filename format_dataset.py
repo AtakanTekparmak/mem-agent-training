@@ -5,8 +5,6 @@ Convert data/base_dataset.json -> data/openrlhf/train.jsonl and valid.jsonl
 """
 
 import argparse, json, pathlib, itertools
-from training.utils import serialize_tilde
-
 
 def main():
     p = argparse.ArgumentParser()
@@ -30,14 +28,12 @@ def main():
             iterator = [questions]
 
         for q in iterator:
-            # Gather label data for serialization
-            label_data = [example["answer"], "retrieval"]
             record = {
                 "context_messages": [
                     {"role": "system", "content": sys_prompt},
                     {"role": "user",   "content": q}
                 ],
-                "label": serialize_tilde(label_data)
+                "label": example["answer"]
             }
             all_records.append(record)
 
