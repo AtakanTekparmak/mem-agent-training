@@ -7,8 +7,14 @@ from agent.engine import execute_sandboxed_code
 
 from training import MEMORY_PATH
 from training.reward import get_reward
+from training.utils import deserialize_tilde
 
 import torch
+from pydantic import BaseModel
+
+class LabelData(BaseModel):
+    answer: str
+    task: str
 
 # Load hyperparameters
 try:
@@ -21,6 +27,18 @@ except:
 # Global states for the environment
 step_idx = 0
 max_steps = 10
+
+def extract_label_data(label: str) -> LabelData:
+    """
+    Extract the label data from the label string.
+    """
+    label_data_list = deserialize_tilde(label)
+
+    if len(label_data_list) != 2:
+        raise ValueError(f"Label data list has wrong length: {len(label_data_list)}")
+
+    return LabelData(answer=label_data_list[0], task=label_data_list[1])
+    
 
 def extract_question(observation: str) -> str:
     """
@@ -79,6 +97,11 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             "sampling_params": kwargs.get("sampling_params", None),
             "extra_logs": {},
         }
+    
+    # Extract the label data
+    label_data = extract_label_data(label)
+    answer = label_data.answer
+    task = label_data.task
 
     # Extract the python code and reply
     python_code = extract_python_code(action)
@@ -117,7 +140,7 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
         reward += 0.1
     elif reply_exists:
         question = extract_question(observation)
-        reward += max(0.1, get_reward(question, reply, label))
+        reward += max(0.1, get_reward(question, reply, answer))
         done = True
 
         next_observation = (
