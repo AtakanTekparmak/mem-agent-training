@@ -38,7 +38,7 @@ def extract_question(observation: str) -> str:
         else:
             raise ValueError("Trying to get question from observation but no assistant block found")
     else:
-        raise ValueError("Observation does not contain a question")
+        raise ValueError(f"Observation does not contain a question:\n {observation}")
 
 async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     """
@@ -133,7 +133,7 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     # If reward is higher than 1, set it to 1
     reward = min(reward, 1.0)
     reward = torch.tensor(reward)
-    
+
     return {
         "rewards": reward,
         "scores": reward,
