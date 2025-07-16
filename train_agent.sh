@@ -39,6 +39,7 @@ print(f'MAX_EPOCHS={hp[\"max_epochs\"]}')
 print(f'ACTOR_LR={hp[\"actor_learning_rate\"]}')
 print(f'CRITIC_LR={hp[\"critic_learning_rate\"]}')
 print(f'NUM_EPISODES={hp[\"num_episodes\"]}')
+print(f'ADVANTAGE_ESTIMATOR=\"{hp[\"advantage_estimator\"]}\"')
 print(f'SAVE_PATH=\"training/ckpt/{path_suffix}\"')
 print(f'CKPT_PATH=\"training/ckpt/{path_suffix}\"')
 ")
@@ -64,13 +65,12 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --kl_target $KL_TARGET \
    --kl_horizon $KL_HORIZON \
    --gamma 1.0 \
-   --use_kl_loss \
    --kl_estimator k3 \
    --pretrain $MODEL_NAME \
    --agent_func_path training/agent_func.py \
    --save_path $SAVE_PATH \
    --ckpt_path $CKPT_PATH \
-   --advantage_estimator reinforce \
+   --advantage_estimator $ADVANTAGE_ESTIMATOR \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
    --train_batch_size 16 \
