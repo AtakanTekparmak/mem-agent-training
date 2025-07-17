@@ -3,7 +3,7 @@
     "name": "Qwen/Qwen3-8B"
   },
   "hyperparameters": {
-    "init_kl_coef": 0.04,
+    "init_kl_coef": 0.08,
     "kl_target": 0.07,
     "kl_horizon": 256,
     "max_epochs": 30,
