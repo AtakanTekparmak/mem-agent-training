@@ -193,12 +193,21 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
         reward = max(reward, -1.0)
     reward = torch.tensor(reward)
 
+    # Set vLLM sampling params with stop tokens
+    # Priority: </python> first, then </reply> (same as our makeshift implementation)
+    sampling_params = kwargs.get("sampling_params", {})
+    if sampling_params is None:
+        sampling_params = {}
+    
+    # Add stop tokens for vLLM native support
+    sampling_params["stop"] = ["</python>", "</reply>"]
+
     return {
         "rewards": reward,
         "scores": reward,
         "next_observation": next_observation,
         "done": done,
-        "sampling_params": kwargs.get("sampling_params", None),
+        "sampling_params": sampling_params,
         "extra_logs": {},
     }
     
