@@ -161,7 +161,10 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     step_idx += 1
 
     # If reward is higher than 1, set it to 1
-    reward = min(reward, 1.0)
+    if reward > 0.0:
+        reward = min(reward, 1.0)
+    else:
+        reward = max(reward, -1.0)
     reward = torch.tensor(reward)
 
     return {
