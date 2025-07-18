@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import uuid
 import json
+import time
 
 from pydantic import BaseModel
 from openai import OpenAI
@@ -53,19 +54,27 @@ def get_model_response(schema: BaseModel, prompt: str, model: str) -> BaseModel:
     Returns:
         The structured response
     """
-    try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
-        response = client.responses.parse(
-            model=model,
-            input=[
-                {"role": "user", "content": prompt}
-            ],
-            text_format=schema
-        )
-        return response.output_parsed 
-    except:
-        print("OpenAI call failed")
-        return None
+    max_retries = 3
+    retry_delay = 1  # seconds
+    
+    for attempt in range(max_retries):
+        try:
+            client = OpenAI(api_key=OPENAI_API_KEY)
+            response = client.responses.parse(
+                model=model,
+                input=[
+                    {"role": "user", "content": prompt}
+                ],
+                text_format=schema
+            )
+            return response.output_parsed 
+        except Exception as e:
+            print(f"OpenAI call failed (attempt {attempt + 1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:  # Don't sleep after the last attempt
+                time.sleep(retry_delay)
+    
+    print("All retry attempts exhausted")
+    return None
 
 def get_reward(
         question: str,

@@ -2,7 +2,7 @@ from typing import Dict, Any
 import os
 import json
 
-from agent.utils import extract_reply, extract_python_code, extract_thoughts, format_results
+from agent.utils import extract_reply, extract_python_code, extract_thoughts, format_results, count_block_occurrences
 from agent.engine import execute_sandboxed_code
 
 from training import MEMORY_PATH
@@ -80,57 +80,83 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             "extra_logs": {},
         }
 
-    # Extract the python code and reply
+    # Count occurrences of each block type
+    think_count = count_block_occurrences(action, "<think>", "</think>")
+    python_count = count_block_occurrences(action, "<python>", "</python>")
+    reply_count = count_block_occurrences(action, "<reply>", "</reply>")
+
+    # Extract the content from blocks
     python_code = extract_python_code(action)
     reply = extract_reply(action)
     thoughts = extract_thoughts(action)
 
-    # Check if the action contains a python code, reply, or thoughts block
+    # Check if the action contains a python code, reply, or thoughts block with content
     python_code_exists = len(python_code.strip()) > 0
     reply_exists = len(reply.strip()) > 0
     thoughts_exists_and_long_enough = len(thoughts.strip()) > THOUGHTS_MIN_LENGTH
 
     # Initialize the reward and done flag
-    reward = 0.1 if thoughts_exists_and_long_enough else 0.0
+    reward = 0.0
     done = False
+    error_msg = None
 
-    if python_code_exists and reply_exists:
+    # Check format requirements
+    format_errors = []
+    
+    # Check for mandatory think block
+    if think_count == 0:
+        format_errors.append("Missing mandatory <think> block")
+    elif think_count > 1:
+        format_errors.append(f"Multiple <think> blocks found ({think_count}), only one allowed")
+    elif not thoughts_exists_and_long_enough:
+        format_errors.append(f"<think> block is too short (minimum {THOUGHTS_MIN_LENGTH} characters)")
+    
+    # Check for exactly one of python or reply
+    if python_count == 0 and reply_count == 0:
+        format_errors.append("Missing either <python> or <reply> block")
+    elif python_count > 0 and reply_count > 0:
+        format_errors.append("Cannot have both <python> and <reply> blocks")
+    elif python_count > 1:
+        format_errors.append(f"Multiple <python> blocks found ({python_count}), only one allowed")
+    elif reply_count > 1:
+        format_errors.append(f"Multiple <reply> blocks found ({reply_count}), only one allowed")
+    
+    # If there are format errors, penalize and return early
+    if format_errors:
+        error_msg = " ".join(format_errors)
         next_observation = (
             observation + action + 
-            "\n [ERROR] You cannot provide a <python> and a <reply> block at the same time." +
+            f"\n [ERROR] Format violation: {error_msg}" +
             "\n<assistant>"
         )
-    elif python_code_exists:
-        local_vars, error_msg = execute_sandboxed_code(
-            code=python_code,
-            allowed_path=MEMORY_PATH,
-            import_module="agent.tools",
-        )
+        reward = -0.2  # Penalty for format violations
+    elif think_count == 1 and thoughts_exists_and_long_enough:
+        # Good format with proper think block
+        reward = 0.1
+        
+        if python_code_exists and python_count == 1:
+            local_vars, exec_error = execute_sandboxed_code(
+                code=python_code,
+                allowed_path=MEMORY_PATH,
+                import_module="agent.tools",
+            )
 
-        next_observation   = (
-            observation + action +
-            format_results(local_vars, error_msg) +
-            ("\n<assistant>")
-        )
+            next_observation = (
+                observation + action +
+                format_results(local_vars, exec_error) +
+                ("\n<assistant>")
+            )
 
-        # format reward 
-        reward += 0.1
-    elif reply_exists:
-        question = extract_question(observation)
-        reward += max(0.1, get_reward(question, reply, label))
-        done = True
+            # Additional reward for valid python block
+            reward += 0.1
+        elif reply_exists and reply_count == 1:
+            question = extract_question(observation)
+            reward += max(0.1, get_reward(question, reply, label))
+            done = True
 
-        next_observation = (
-            observation + action + "\n</s>"
-        )
-    else:
-        # Handle the case where the model output didn't contain a recognised
-        # block so that `next_observation` is always defined.
-        next_observation = (
-            observation + action +
-            "\n [ERROR] Missing <python> or <reply> block." +
-            "\n<assistant>"
-        )
+            next_observation = (
+                observation + action + "\n</s>"
+            )
 
     step_idx += 1
 

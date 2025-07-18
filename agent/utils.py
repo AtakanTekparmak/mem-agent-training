@@ -136,6 +136,33 @@ def extract_thoughts(response: str) -> str:
         return ""
 
 
+def count_block_occurrences(response: str, open_tag: str, close_tag: str) -> int:
+    """
+    Count the number of occurrences of a specific block type.
+    
+    Args:
+        response: The response from the model
+        open_tag: The opening tag (e.g., "<think>")
+        close_tag: The closing tag (e.g., "</think>")
+    
+    Returns:
+        The number of complete block occurrences
+    """
+    count = 0
+    temp = response
+    while open_tag in temp and close_tag in temp:
+        # Find the first occurrence
+        open_idx = temp.find(open_tag)
+        close_idx = temp.find(close_tag, open_idx)
+        if close_idx > open_idx:
+            count += 1
+            # Move past this occurrence
+            temp = temp[close_idx + len(close_tag):]
+        else:
+            break
+    return count
+
+
 def format_results(results: dict, error_msg: str = "") -> str:
     """
     Format the results into a string.
