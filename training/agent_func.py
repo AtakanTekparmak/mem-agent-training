@@ -157,6 +157,29 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             next_observation = (
                 observation + action + "\n</s>"
             )
+        else:
+            # Handle case where blocks exist but are empty
+            if python_count == 1:
+                error_msg = "Python block is empty"
+            elif reply_count == 1:
+                error_msg = "Reply block is empty"
+            else:
+                error_msg = "Unknown error - valid format but no executable content"
+            
+            next_observation = (
+                observation + action + 
+                f"\n [ERROR] {error_msg}" +
+                "\n<assistant>"
+            )
+            reward = -0.2  # Penalty for empty blocks
+    else:
+        # Fallback case for any other unexpected scenarios
+        next_observation = (
+            observation + action + 
+            "\n [ERROR] Unexpected format issue" +
+            "\n<assistant>"
+        )
+        reward = -0.2
 
     step_idx += 1
 
