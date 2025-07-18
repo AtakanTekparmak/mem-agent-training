@@ -98,4 +98,5 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --num_episodes $NUM_EPISODES \
    --save_steps 1 \
    --packing_samples --flash_attn \
-   --wandb_project obsidian-retrieval-openrlhf
+   --normalize_reward \
+   --wandb_project obsidian-retrieval-openrlhf \

@@ -80,6 +80,15 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             "extra_logs": {},
         }
 
+    # Apply stop token logic - truncate action after closing tags
+    # Priority: </python> first, then </reply>
+    if "</python>" in action:
+        python_end_idx = action.find("</python>") + len("</python>")
+        action = action[:python_end_idx]
+    elif "</reply>" in action:
+        reply_end_idx = action.find("</reply>") + len("</reply>")
+        action = action[:reply_end_idx]
+
     # Count occurrences of each block type
     think_count = count_block_occurrences(action, "<think>", "</think>")
     python_count = count_block_occurrences(action, "<python>", "</python>")
@@ -111,15 +120,9 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     elif not thoughts_exists_and_long_enough:
         format_errors.append(f"<think> block is too short (minimum {THOUGHTS_MIN_LENGTH} characters)")
     
-    # Check for exactly one of python or reply
+    # Check for required python or reply block
     if python_count == 0 and reply_count == 0:
         format_errors.append("Missing either <python> or <reply> block")
-    elif python_count > 0 and reply_count > 0:
-        format_errors.append("Cannot have both <python> and <reply> blocks")
-    elif python_count > 1:
-        format_errors.append(f"Multiple <python> blocks found ({python_count}), only one allowed")
-    elif reply_count > 1:
-        format_errors.append(f"Multiple <reply> blocks found ({reply_count}), only one allowed")
     
     # If there are format errors, penalize and return early
     if format_errors:
