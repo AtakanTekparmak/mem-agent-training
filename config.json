@@ -4,7 +4,7 @@
   },
   "hyperparameters": {
     "init_kl_coef": 0.08,
-    "kl_target": 0.07,
+    "kl_target": 0.20,
     "kl_horizon": 128,
     "max_epochs": 20,
     "actor_learning_rate": "1e-7",

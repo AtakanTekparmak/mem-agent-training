@@ -126,14 +126,14 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
         format_errors.append("Missing either <python> or <reply> block")
     
     # If there are format errors, penalize and return early
-    if format_errors:
+    if len(format_errors) > 0:
         error_msg = " ".join(format_errors)
         next_observation = (
             observation + action + 
             f"\n [ERROR] Format violation: {error_msg}" +
             "\n<assistant>"
         )
-        reward = -0.2  # Penalty for format violations
+        #reward = -0.2  # Penalty for format violations
     elif think_count == 1 and thoughts_exists_and_long_enough:
         # Good format with proper think block
         reward = 0.1
@@ -175,7 +175,7 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
                 f"\n [ERROR] {error_msg}" +
                 "\n<assistant>"
             )
-            reward = -0.2  # Penalty for empty blocks
+            #reward = -0.2  # Penalty for empty blocks
     else:
         # Fallback case for any other unexpected scenarios
         next_observation = (
@@ -183,15 +183,13 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             "\n [ERROR] Unexpected format issue" +
             "\n<assistant>"
         )
-        reward = -0.2
+        #reward = -0.2
 
     step_idx += 1
 
     # If reward is higher than 1, set it to 1
-    if reward > 0.0:
-        reward = min(reward, 1.0)
-    else:
-        reward = max(reward, -1.0)
+    reward = min(reward, 1.0)
+    reward = max(reward, 0.0)
     reward = torch.tensor(reward)
 
     sampling_params = kwargs.get("sampling_params", None)
