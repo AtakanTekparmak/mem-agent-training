@@ -10,7 +10,7 @@
     "actor_learning_rate": "1e-7",
     "critic_learning_rate": "5e-6",
     "num_episodes": 8,
-    "thoughts_min_length": 1024,
+    "thoughts_min_length": 512,
     "advantage_estimator": "rloo"
   }
 } 
