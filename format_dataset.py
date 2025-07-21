@@ -4,7 +4,16 @@ make_openrlhf_dataset.py
 Convert data/base_dataset.json -> data/openrlhf/train.jsonl and valid.jsonl
 """
 
-import argparse, json, pathlib, itertools, random
+import argparse, json, pathlib, random
+from enum import Enum
+
+class TaskType(Enum):
+    RETRIEVAL = "retrieval"
+    UPDATE = "update"
+
+def construct_label(task_type: TaskType, answer: str, mem_id: str) -> str:
+    delimiter = "~/~" if task_type == TaskType.RETRIEVAL else "~@~"
+    return f"{mem_id}{delimiter}{answer}"
 
 def main():
     p = argparse.ArgumentParser()
@@ -37,7 +46,7 @@ def main():
                     {"role": "system", "content": sys_prompt},
                     {"role": "user",   "content": q}
                 ],
-                "label": example["answer"]
+                "label": construct_label(TaskType.RETRIEVAL, example["answer"], "groningen-1")
             }
             all_records.append(record)
 
