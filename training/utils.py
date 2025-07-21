@@ -53,14 +53,15 @@ def extract_question(observation: str) -> str:
     Returns:
         str: The question
     """
-    if "<|im_start|>user" in observation:
-        if "<|im_start|>assistant" in observation:
-            extracted_question = observation.split("<|im_start|>user")[1].split("<|im_start|>assistant")[0].strip()
-            if "<|im_end|>" in extracted_question:
-                return extracted_question.split("<|im_end|>")[0].strip()
-            else:
-                return extracted_question
-        else:
-            raise ValueError("Trying to get question from observation but no assistant block found")
+    if "[/INST]" in observation:
+        # Split by [/INST] and take the part before it
+        before_inst = observation.split("[/INST]")[0]
+        # The question should be the last non-empty line
+        lines = before_inst.split('\n')
+        for line in reversed(lines):
+            line = line.strip()
+            if line:
+                return line
+        raise ValueError("No question found before [/INST] tag")
     else:
-        raise ValueError(f"Observation does not contain a question")
+        raise ValueError(f"Observation does not contain [/INST] tag")
