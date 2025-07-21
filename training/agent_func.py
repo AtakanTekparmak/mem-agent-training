@@ -1,5 +1,5 @@
 from typing import Dict, Any
-import os
+from enum import Enum
 import json
 
 from agent.utils import extract_reply, extract_python_code, extract_thoughts, format_results
@@ -7,6 +7,7 @@ from agent.engine import execute_sandboxed_code
 
 from training import MEMORY_PATH
 from training.reward import get_reward
+from training.utils import Task, extract_task_from_label
 
 import torch
 
@@ -65,6 +66,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     global step_idx, max_steps
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
 
+    task: Task = extract_task_from_label(label)
+
     if step_idx >= max_steps:
         done = True
         next_observation = (
@@ -117,7 +120,7 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
         reward += 0.1
     elif reply_exists:
         question = extract_question(observation)
-        reward += max(0.1, get_reward(question, reply, label))
+        reward += max(0.1, get_reward(question, reply, task.answer))
         done = True
 
         next_observation = (

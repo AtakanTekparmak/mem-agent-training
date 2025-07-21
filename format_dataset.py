@@ -4,7 +4,9 @@ make_openrlhf_dataset.py
 Convert data/base_dataset.json -> data/openrlhf/train.jsonl and valid.jsonl
 """
 
-import argparse, json, pathlib, itertools, random
+import argparse, json, pathlib, random
+
+from training.utils import TaskType, construct_label
 
 def main():
     p = argparse.ArgumentParser()
@@ -37,7 +39,7 @@ def main():
                     {"role": "system", "content": sys_prompt},
                     {"role": "user",   "content": q}
                 ],
-                "label": example["answer"]
+                "label": construct_label(TaskType.RETRIEVAL, example["answer"], "groningen-1")
             }
             all_records.append(record)
 
