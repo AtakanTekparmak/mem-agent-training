@@ -1,15 +1,13 @@
 from typing import Dict, Any
-from enum import Enum
 import json
 
-from agent.utils import extract_reply, extract_python_code, extract_thoughts, format_results
-from agent.engine import execute_sandboxed_code
+from agent.utils import extract_reply, extract_python_code, extract_thoughts
 
-from training import MEMORY_PATH
-from training.reward import get_reward
-from training.utils import Task, extract_task_from_label
+from training.retrieval import process_retrieval_action
+from training.utils import Task, TaskType, extract_task_from_label
 
 import torch
+from vllm import SamplingParams
 
 # Load hyperparameters
 try:
@@ -22,28 +20,6 @@ except:
 # Global states for the environment
 step_idx = 0
 max_steps = 10
-
-def extract_question(observation: str) -> str:
-    """
-    Extract the question from the observation.
-
-    Args:
-        observation: The input prompt/expression
-
-    Returns:
-        str: The question
-    """
-    if "<|im_start|>user" in observation:
-        if "<|im_start|>assistant" in observation:
-            extracted_question = observation.split("<|im_start|>user")[1].split("<|im_start|>assistant")[0].strip()
-            if "<|im_end|>" in extracted_question:
-                return extracted_question.split("<|im_end|>")[0].strip()
-            else:
-                return extracted_question
-        else:
-            raise ValueError("Trying to get question from observation but no assistant block found")
-    else:
-        raise ValueError(f"Observation does not contain a question")
 
 async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     """
@@ -88,65 +64,33 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     reply = extract_reply(action)
     thoughts = extract_thoughts(action)
 
-    # Check if the action contains a python code, reply, or thoughts block
-    python_code_exists = len(python_code.strip()) > 0
-    reply_exists = len(reply.strip()) > 0
-    thoughts_exists_and_long_enough = len(thoughts.strip()) > THOUGHTS_MIN_LENGTH
+    if task.task_type == TaskType.RETRIEVAL:
 
-    # Initialize the reward and done flag
-    reward = 0.1 if thoughts_exists_and_long_enough else 0.0
-    done = False
-
-    if python_code_exists and reply_exists:
-        next_observation = (
-            observation + action + 
-            "\n [ERROR] You cannot provide a <python> and a <reply> block at the same time." +
-            "\n<assistant>"
-        )
-    elif python_code_exists:
-        local_vars, error_msg = execute_sandboxed_code(
-            code=python_code,
-            allowed_path=MEMORY_PATH,
-            import_module="agent.tools",
-        )
-
-        next_observation   = (
-            observation + action +
-            format_results(local_vars, error_msg) +
-            ("\n<assistant>")
-        )
-
-        # format reward 
-        reward += 0.1
-    elif reply_exists:
-        question = extract_question(observation)
-        reward += max(0.1, get_reward(question, reply, task.answer))
-        done = True
-
-        next_observation = (
-            observation + action + "\n</s>"
-        )
-    else:
-        # Handle the case where the model output didn't contain a recognised
-        # block so that `next_observation` is always defined.
-        next_observation = (
-            observation + action +
-            "\n [ERROR] Missing <python> or <reply> block." +
-            "\n<assistant>"
+        reward, done, next_observation = process_retrieval_action(
+            observation=observation,
+            action=action,
+            python_code=python_code,
+            reply=reply,
+            thoughts=thoughts,
+            task=task,
+            thoughts_min_length=THOUGHTS_MIN_LENGTH
         )
 
     step_idx += 1
-
-    # If reward is higher than 1, set it to 1
-    reward = min(reward, 1.0)
     reward = torch.tensor(reward)
+
+    # Set vLLM sampling parameters with stop tokens
+    sampling_params = kwargs.get("sampling_params", None)
+    if sampling_params is None:
+        sampling_params = SamplingParams(stop=["</python>", "</reply>"])
+    sampling_params.stop = ["</python>", "</reply>"]
 
     return {
         "rewards": reward,
         "scores": reward,
         "next_observation": next_observation,
         "done": done,
-        "sampling_params": kwargs.get("sampling_params", None),
+        "sampling_params": sampling_params,
         "extra_logs": {},
     }
     

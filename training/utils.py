@@ -41,3 +41,26 @@ def extract_task_from_label(label: str) -> Task:
     """ 
     task_type, mem_id, answer = label.split(DELIMITER)
     return Task(task_type=TaskType(task_type), mem_id=mem_id, answer=answer)
+
+
+def extract_question(observation: str) -> str:
+    """
+    Extract the question from the observation.
+
+    Args:
+        observation: The input prompt/expression
+
+    Returns:
+        str: The question
+    """
+    if "<|im_start|>user" in observation:
+        if "<|im_start|>assistant" in observation:
+            extracted_question = observation.split("<|im_start|>user")[1].split("<|im_start|>assistant")[0].strip()
+            if "<|im_end|>" in extracted_question:
+                return extracted_question.split("<|im_end|>")[0].strip()
+            else:
+                return extracted_question
+        else:
+            raise ValueError("Trying to get question from observation but no assistant block found")
+    else:
+        raise ValueError(f"Observation does not contain a question")
