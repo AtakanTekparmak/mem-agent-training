@@ -7,18 +7,9 @@ from agent.engine import execute_sandboxed_code
 
 from training import MEMORY_PATH
 from training.reward import get_reward
+from training.utils import Task, extract_task_from_label
 
 import torch
-from pydantic import BaseModel
-
-class TaskType(Enum):
-    RETRIEVAL = "retrieval"
-    UPDATE = "update"
-
-class Task(BaseModel):
-    task_type: TaskType
-    mem_id: str
-    answer: str
 
 # Load hyperparameters
 try:
@@ -53,22 +44,6 @@ def extract_question(observation: str) -> str:
             raise ValueError("Trying to get question from observation but no assistant block found")
     else:
         raise ValueError(f"Observation does not contain a question")
-    
-def split_label(label: str) -> Task:
-    if "~/~" in label:
-        task_type = TaskType.RETRIEVAL
-        mem_id, answer = label.split("~/~")
-    elif "~@~" in label:
-        task_type = TaskType.UPDATE
-        mem_id, answer = label.split("~@~")
-    else:
-        raise ValueError(f"Label does not contain a valid delimiter: {label}")
-    
-    # If mem_id or answer is empty, raise an error
-    if not mem_id or not answer:
-        raise ValueError(f"Mem_id or answer is empty: {label}")
-    
-    return Task(task_type=task_type, mem_id=mem_id, answer=answer)
 
 async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     """
@@ -91,7 +66,7 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     global step_idx, max_steps
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
 
-    task = split_label(label)
+    task: Task = extract_task_from_label(label)
 
     if step_idx >= max_steps:
         done = True

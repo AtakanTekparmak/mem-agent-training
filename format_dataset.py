@@ -5,15 +5,8 @@ Convert data/base_dataset.json -> data/openrlhf/train.jsonl and valid.jsonl
 """
 
 import argparse, json, pathlib, random
-from enum import Enum
 
-class TaskType(Enum):
-    RETRIEVAL = "retrieval"
-    UPDATE = "update"
-
-def construct_label(task_type: TaskType, answer: str, mem_id: str) -> str:
-    delimiter = "~/~" if task_type == TaskType.RETRIEVAL else "~@~"
-    return f"{mem_id}{delimiter}{answer}"
+from training.utils import TaskType, construct_label
 
 def main():
     p = argparse.ArgumentParser()
