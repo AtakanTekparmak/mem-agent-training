@@ -42,8 +42,6 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     global step_idx, max_steps
     print(f"step_idx: {step_idx}, max_steps: {max_steps}")
 
-    task: Task = extract_task_from_label(label)
-
     if step_idx >= max_steps:
         done = True
         next_observation = (
@@ -58,11 +56,23 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             "sampling_params": kwargs.get("sampling_params", None),
             "extra_logs": {},
         }
+    
+    # Truncate the action after the closing tags
+    if "</python>" in action:
+        python_end_idx = action.find("</python>") + len("</python>")
+        action = action[:python_end_idx]
+
+    if "</reply>" in action:
+        reply_end_idx = action.find("</reply>") + len("</reply>")
+        action = action[:reply_end_idx]
 
     # Extract the python code and reply
     python_code = extract_python_code(action)
     reply = extract_reply(action)
     thoughts = extract_thoughts(action)
+
+    # Extract the task from the label
+    task: Task = extract_task_from_label(label)
 
     if task.task_type == TaskType.RETRIEVAL:
 
@@ -79,18 +89,12 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     step_idx += 1
     reward = torch.tensor(reward)
 
-    # Set vLLM sampling parameters with stop tokens
-    sampling_params = kwargs.get("sampling_params", None)
-    if sampling_params is None:
-        sampling_params = SamplingParams(stop=["</python>", "</reply>"])
-    sampling_params.stop = ["</python>", "</reply>"]
-
     return {
         "rewards": reward,
         "scores": reward,
         "next_observation": next_observation,
         "done": done,
-        "sampling_params": sampling_params,
+        "sampling_params": kwargs.get("sampling_params", None),
         "extra_logs": {},
     }
     
