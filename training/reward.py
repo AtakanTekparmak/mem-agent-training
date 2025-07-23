@@ -19,7 +19,7 @@ DEBUG_DIR = os.path.join(OBSIDIAN_ROOT, "debug")
 DEBUG_JUDGE_DIR = os.path.join(DEBUG_DIR, "judge")
 os.makedirs(DEBUG_JUDGE_DIR, exist_ok=True)
 
-class JudgeResponse(BaseModel):
+class RetrievalJudgeResponse(BaseModel):
     question: str
     reply: str
     ground_truth: str
@@ -67,7 +67,7 @@ def get_model_response(schema: BaseModel, prompt: str, model: str) -> BaseModel:
         print("OpenAI call failed")
         return None
 
-def get_reward(
+def get_retrieval_reward(
         question: str,
         agent_reply: str,
         ground_truth: str,
@@ -81,7 +81,7 @@ def get_reward(
     """
     judge_prompt = load_judge_prompt(question, agent_reply, ground_truth)
     judge_response = get_model_response(
-        schema=JudgeResponse,
+        schema=RetrievalJudgeResponse,
         prompt=judge_prompt,
         model=GPT_O3
     )

@@ -3,7 +3,7 @@ import torch
 from agent.utils import format_results
 from agent.engine import execute_sandboxed_code
 from training import MEMORY_PATH
-from training.reward import get_reward
+from training.reward import get_retrieval_reward
 from training.utils import Task, extract_question
 
 
@@ -63,7 +63,7 @@ def process_retrieval_action(
         reward += 0.1
     elif reply_exists:
         question = extract_question(observation)
-        reward += max(0.1, get_reward(question, reply, task.answer))
+        reward += max(0.1, get_retrieval_reward(question, reply, task.answer))
         done = True
 
         next_observation = (
