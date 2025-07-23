@@ -4,7 +4,7 @@ import json
 from agent.utils import extract_reply, extract_python_code, extract_thoughts
 
 from training.retrieval import process_retrieval_action
-from training.utils import Task, TaskType, extract_task_from_label
+from training.utils import Task, TaskType, extract_task_from_label, format_agent_response
 
 import torch
 from vllm import SamplingParams
@@ -83,7 +83,8 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             reply=reply,
             thoughts=thoughts,
             task=task,
-            thoughts_min_length=THOUGHTS_MIN_LENGTH
+            thoughts_min_length=THOUGHTS_MIN_LENGTH,
+            step_num=step_idx
         )
 
     step_idx += 1
@@ -101,6 +102,6 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
         "next_observation": next_observation,
         "done": done,
         "sampling_params": sampling_params,
-        "extra_logs": {},
+        "extra_logs": {"formatted_response": format_agent_response(thoughts, python_code, reply, reward)},
     }
     

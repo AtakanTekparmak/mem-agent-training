@@ -64,3 +64,19 @@ def extract_question(observation: str) -> str:
             raise ValueError("Trying to get question from observation but no assistant block found")
     else:
         raise ValueError(f"Observation does not contain a question")
+    
+
+def format_agent_response(thoughts: str, python_code: str, reply: str, reward: float) -> str:
+    """
+    Formats the agent's response to a string.
+
+    Args:
+        thoughts: The agent's thoughts.
+        python_code: The agent's python code.
+        reply: The agent's reply.
+        reward: The reward received by the agent.
+    
+    Returns:
+        A string representing the agent's response.
+    """
+    return f"Agent's response:\n<think>{thoughts}</think>\n<python>{python_code}</python>\n<reply>{reply}</reply>\n<reward>{reward}</reward>"
