@@ -1,7 +1,6 @@
 from enum import Enum
 from typing import Optional
 import os
-import shutil
 
 from pydantic import BaseModel
 
@@ -33,6 +32,7 @@ class EntityFile(BaseModel):
     entity_file_content: str
 
 class StaticMemory(BaseModel):
+    memory_id: str
     user_md: str
     entities: list[EntityFile]
 
@@ -41,6 +41,9 @@ class StaticMemory(BaseModel):
         Instantiate the static memory inside the memory path.
         """
         try:
+            # Add memory_id to the path
+            path = os.path.join(path, self.memory_id)
+            
             # Create the base memory directory
             create_memory_if_not_exists(path)
             

@@ -1,4 +1,4 @@
-import torch
+import os
 
 from agent.utils import format_results
 from agent.engine import execute_sandboxed_code
@@ -49,7 +49,7 @@ def process_retrieval_action(
     elif python_code_exists:
         local_vars, error_msg = execute_sandboxed_code(
             code=python_code,
-            allowed_path=MEMORY_PATH,
+            allowed_path=os.path.join(MEMORY_PATH, task.mem_id),
             import_module="agent.tools",
         )
 
