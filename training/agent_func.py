@@ -89,12 +89,18 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     step_idx += 1
     reward = torch.tensor(reward)
 
+    # Sampling parameters
+    sampling_params = kwargs.get("sampling_params", None)
+    if sampling_params is None:
+        sampling_params = SamplingParams(stop=["<result>"])
+    sampling_params.stop = ["<result>"]
+
     return {
         "rewards": reward,
         "scores": reward,
         "next_observation": next_observation,
         "done": done,
-        "sampling_params": kwargs.get("sampling_params", None),
+        "sampling_params": sampling_params,
         "extra_logs": {},
     }
     
