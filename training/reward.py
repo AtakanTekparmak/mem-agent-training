@@ -27,6 +27,10 @@ class RetrievalJudgeResponse(BaseModel):
     reasoning: str
     ground_truth_in_reply: bool
 
+class UpdateJudgeResponse(BaseModel):
+    num_correct_diffs_applied: int
+    num_target_diffs: int
+
 def load_retrieval_judge_prompt(question: str, reply: str, ground_truth: str) -> str:
     """
     Load the retrieval judge prompt and replace the placeholders with the reply and ground truth.
@@ -40,6 +44,20 @@ def load_retrieval_judge_prompt(question: str, reply: str, ground_truth: str) ->
     judge_prompt = judge_prompt.replace("{{question}}", question)
     judge_prompt = judge_prompt.replace("{{reply}}", reply)
     judge_prompt = judge_prompt.replace("{{ground_truth}}", ground_truth)
+    return judge_prompt
+
+def load_update_judge_prompt(python_blocks: str, diff: str) -> str:
+    """
+    Load the update judge prompt and replace the placeholders with the python blocks and diff.
+    """
+    try:
+        with open(UPDATE_JUDGE_PROMPT_PATH, "r") as f:
+            judge_prompt = f.read()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Judge prompt file not found at {UPDATE_JUDGE_PROMPT_PATH}")
+    
+    judge_prompt = judge_prompt.replace("{{python_blocks}}", python_blocks)
+    judge_prompt = judge_prompt.replace("{{diff}}", diff)
     return judge_prompt
 
 def get_model_response(schema: BaseModel, prompt: str, model: str) -> BaseModel:
@@ -80,7 +98,13 @@ def get_retrieval_reward(
     ) -> float:
     """
     Get the reward for the given agent reply and ground truth.
-    
+
+    Args:
+        question: The question to evaluate
+        agent_reply: The agent's reply to the question
+        ground_truth: The ground truth answer
+        debug: Whether to save the debug files
+
     Returns:
         float: 1.0 if ground truth is present in reply, 0.0 otherwise
     """
@@ -93,7 +117,7 @@ def get_retrieval_reward(
 
     if debug:
         debug_id = str(uuid.uuid4())
-        debug_file = os.path.join(DEBUG_JUDGE_DIR, f"judge_response_{debug_id}.json")
+        debug_file = os.path.join(DEBUG_JUDGE_DIR, f"retrieval_judge_response_{debug_id}.json")
         try:
             with open(debug_file, "w") as f:
                 json.dump(judge_response.model_dump(), f)
@@ -103,3 +127,50 @@ def get_retrieval_reward(
     if judge_response is None:
         return 0.0
     return 1.0 if judge_response.ground_truth_in_reply else 0.0
+
+def get_update_reward(
+        python_blocks: str,
+        diff: str,
+        debug: bool = False
+    ) -> float:
+    """
+    Get the reward for the given python blocks and diff.
+
+    Args:
+        python_blocks: The python blocks to evaluate
+        diff: The diff to evaluate
+        debug: Whether to save the debug files
+
+    Returns:
+        float: The reward for the given python blocks and diff
+    """
+    judge_prompt = load_update_judge_prompt(python_blocks, diff)
+    judge_response = get_model_response(
+        schema=UpdateJudgeResponse,
+        prompt=judge_prompt,
+        model=GPT_O3
+    )
+
+    if judge_response is None:
+        return 0.0
+    if judge_response.num_target_diffs == 0:
+        retries = 3
+        for _ in range(retries):
+            judge_response = get_model_response(
+                schema=UpdateJudgeResponse,
+                prompt=judge_prompt,
+                model=GPT_O3
+            )
+            if judge_response is not None and judge_response.num_target_diffs > 0:
+                break
+
+    if debug:
+        debug_id = str(uuid.uuid4())
+        debug_file = os.path.join(DEBUG_JUDGE_DIR, f"update_judge_response_{debug_id}.json")
+        try:
+            with open(debug_file, "w") as f:
+                json.dump(judge_response.model_dump(), f)
+        except Exception as e:
+            print(f"Error saving debug file: {e}")
+        
+    return judge_response.num_correct_diffs_applied / judge_response.num_target_diffs if judge_response is not None else 0.0

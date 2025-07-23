@@ -1,4 +1,5 @@
 from enum import Enum
+import re
 
 from pydantic import BaseModel
 
@@ -80,3 +81,20 @@ def format_agent_response(thoughts: str, python_code: str, reply: str, reward: f
         A string representing the agent's response.
     """
     return f"Agent's response:\n<think>{thoughts}</think>\n<python>{python_code}</python>\n<reply>{reply}</reply>\n<reward>{reward}</reward>"
+
+def extract_python_blocks(observation: str) -> str:
+    """
+    Extracts all the python blocks from the observation
+    and returns them in a single concatenated string.
+
+    Args:
+        observation: The input prompt/expression
+
+    Returns:
+        A string containing all the python blocks.
+    """
+    # Find all the python blocks in the observation
+    python_blocks = re.findall(r"<python>(.*?)</python>", observation)
+     
+    # Join them, with the proper <python> and </python> tags before and after
+    return "\n".join([f"<python>{block}</python>" for block in python_blocks])

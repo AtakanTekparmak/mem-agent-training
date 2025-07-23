@@ -4,6 +4,7 @@ import json
 from agent.utils import extract_reply, extract_python_code, extract_thoughts
 
 from training.retrieval import process_retrieval_action
+from training.update import process_update_action
 from training.utils import Task, TaskType, extract_task_from_label, format_agent_response
 
 import torch
@@ -87,6 +88,18 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             step_num=step_idx
         )
 
+    elif task.task_type == TaskType.UPDATE:
+        reward, done, next_observation = process_update_action(
+            observation=observation,
+            action=action,
+            python_code=python_code,
+            reply=reply,
+            thoughts=thoughts,
+            task=task,
+            thoughts_min_length=THOUGHTS_MIN_LENGTH,
+            step_num=step_idx
+        )
+        
     step_idx += 1
     reward = torch.tensor(reward)
 
