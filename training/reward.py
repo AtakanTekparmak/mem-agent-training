@@ -14,6 +14,7 @@ load_dotenv()
 # Constants
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 RETRIEVAL_JUDGE_PROMPT_PATH = os.path.join(OBSIDIAN_ROOT, "training", "prompts", "retrieval_judge_prompt.txt")
+UPDATE_JUDGE_PROMPT_PATH = os.path.join(OBSIDIAN_ROOT, "training", "prompts", "update_judge_prompt.txt")
 GPT_O3 = "o3-2025-04-16"
 DEBUG_DIR = os.path.join(OBSIDIAN_ROOT, "debug")
 DEBUG_JUDGE_DIR = os.path.join(DEBUG_DIR, "judge")
@@ -53,19 +54,23 @@ def get_model_response(schema: BaseModel, prompt: str, model: str) -> BaseModel:
     Returns:
         The structured response
     """
-    try:
-        client = OpenAI(api_key=OPENAI_API_KEY)
-        response = client.responses.parse(
-            model=model,
-            input=[
-                {"role": "user", "content": prompt}
-            ],
-            text_format=schema
-        )
-        return response.output_parsed 
-    except:
-        print("OpenAI call failed")
-        return None
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    
+    for attempt in range(3):
+        try:
+            response = client.responses.parse(
+                model=model,
+                input=[
+                    {"role": "user", "content": prompt}
+                ],
+                text_format=schema
+            )
+            return response.output_parsed 
+        except Exception as e:
+            print(f"OpenAI call failed on attempt {attempt + 1}: {e}")
+            if attempt == 2:  # Last attempt
+                print("All retry attempts failed")
+                return None
 
 def get_retrieval_reward(
         question: str,

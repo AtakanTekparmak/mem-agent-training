@@ -3,7 +3,7 @@ from enum import Enum
 from pydantic import BaseModel
 
 # Define constants
-DELIMITER = "~/~"
+DELIMITER = "\n\n~/~/~/~/~/~/~/~/~/~/~/~\n\n"
 
 class TaskType(Enum):
     RETRIEVAL = "retrieval"
