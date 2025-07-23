@@ -13,7 +13,7 @@ load_dotenv()
 
 # Constants
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-JUDGE_PROMPT_PATH = os.path.join(OBSIDIAN_ROOT, "training", "judge_prompt.txt")
+RETRIEVAL_JUDGE_PROMPT_PATH = os.path.join(OBSIDIAN_ROOT, "training", "prompts", "retrieval_judge_prompt.txt")
 GPT_O3 = "o3-2025-04-16"
 DEBUG_DIR = os.path.join(OBSIDIAN_ROOT, "debug")
 DEBUG_JUDGE_DIR = os.path.join(DEBUG_DIR, "judge")
@@ -26,15 +26,15 @@ class RetrievalJudgeResponse(BaseModel):
     reasoning: str
     ground_truth_in_reply: bool
 
-def load_judge_prompt(question: str, reply: str, ground_truth: str) -> str:
+def load_retrieval_judge_prompt(question: str, reply: str, ground_truth: str) -> str:
     """
-    Load the judge prompt and replace the placeholders with the reply and ground truth.
+    Load the retrieval judge prompt and replace the placeholders with the reply and ground truth.
     """
     try:
-        with open(JUDGE_PROMPT_PATH, "r") as f:
+        with open(RETRIEVAL_JUDGE_PROMPT_PATH, "r") as f:
             judge_prompt = f.read()
     except FileNotFoundError:
-        raise FileNotFoundError(f"Judge prompt file not found at {JUDGE_PROMPT_PATH}")
+        raise FileNotFoundError(f"Judge prompt file not found at {RETRIEVAL_JUDGE_PROMPT_PATH}")
     
     judge_prompt = judge_prompt.replace("{{question}}", question)
     judge_prompt = judge_prompt.replace("{{reply}}", reply)
@@ -79,7 +79,7 @@ def get_retrieval_reward(
     Returns:
         float: 1.0 if ground truth is present in reply, 0.0 otherwise
     """
-    judge_prompt = load_judge_prompt(question, agent_reply, ground_truth)
+    judge_prompt = load_retrieval_judge_prompt(question, agent_reply, ground_truth)
     judge_response = get_model_response(
         schema=RetrievalJudgeResponse,
         prompt=judge_prompt,
