@@ -98,3 +98,46 @@ def extract_python_blocks(observation: str) -> str:
      
     # Join them, with the proper <python> and </python> tags before and after
     return "\n".join([f"<python>{block}</python>" for block in python_blocks])
+
+def remove_all_thinks_except_last(observation: str) -> str:
+    """
+    Removes all the <think> blocks from the observation except the last one,
+    but only processes think blocks that appear after "assistant" is seen.
+
+    Args:
+        observation: The conversation history as a string.
+
+    Returns:
+        A string containing all observation with the <think> blocks except the last one removed.
+    """
+    # Find the position where "assistant" first appears
+    assistant_pos = observation.find("assistant")
+    
+    if assistant_pos == -1:
+        # No "assistant" found, return observation unchanged
+        return observation
+    
+    # Split the observation into before and after "assistant"
+    before_assistant = observation[:assistant_pos + len("assistant")]
+    after_assistant = observation[assistant_pos + len("assistant"):]
+    
+    # Find all the <think> blocks in the part after "assistant"
+    think_blocks = re.findall(r"<think>(.*?)</think>", after_assistant, re.DOTALL)
+
+    if len(think_blocks) == 0:
+        return observation
+    elif len(think_blocks) == 1:
+        return observation
+    else:
+        # Remove all think blocks except the last one from the after_assistant part
+        result_after = after_assistant
+        
+        # Remove all but the last think block
+        for i in range(len(think_blocks) - 1):
+            # Find and remove the first occurrence of this think block
+            pattern = r"<think>" + re.escape(think_blocks[i]) + r"</think>"
+            result_after = re.sub(pattern, "", result_after, count=1, flags=re.DOTALL)
+        
+        # Combine the before and processed after parts
+        return before_assistant + result_after
+        

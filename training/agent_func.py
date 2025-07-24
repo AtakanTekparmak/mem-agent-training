@@ -1,7 +1,7 @@
 from typing import Dict, Any
 import json
 
-from agent.utils import extract_reply, extract_python_code, extract_thoughts
+from agent.utils import extract_reply, extract_python_code, extract_thoughts, remove_all_thinks_except_last
 
 from training.action_processor import process_action_base
 from training.retrieval import calculate_retrieval_python_reward, calculate_retrieval_reply_reward
@@ -58,6 +58,9 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
             "sampling_params": kwargs.get("sampling_params", None),
             "extra_logs": {},
         }
+    
+    # Remove all the <think> blocks except the last one
+    observation = remove_all_thinks_except_last(observation)
     
     # Truncate the action after the closing tags
     if "</python>" in action:
