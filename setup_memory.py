@@ -26,20 +26,37 @@ def load_static_memory_from_example_data(memory_dir: pathlib.Path) -> StaticMemo
     except Exception as e:
         raise ValueError(f"Error loading static memory from {base_memory_path}: {e}")
 
-def load_all_static_memories(example_data_dir: str = "example_data") -> List[StaticMemory]:
+def load_all_static_memories(data_dir: str = "instances") -> List[StaticMemory]:
     """
-    Load all static memories from example_data directory.
+    Load all static memories from data directory (instances/ or example_data/ structure).
     """
-    input_path = pathlib.Path(example_data_dir)
+    input_path = pathlib.Path(data_dir)
     
     if not input_path.exists():
-        raise FileNotFoundError(f"Example data directory not found: {example_data_dir}")
+        raise FileNotFoundError(f"Data directory not found: {data_dir}")
     
     # Find all memory directories
-    memory_dirs = [d for d in input_path.iterdir() if d.is_dir() and d.name.startswith("memory_")]
+    memory_dirs = []
+    subdirs = [d for d in input_path.iterdir() if d.is_dir()]
+    
+    if any(d.name.startswith("memory_") for d in subdirs):
+        # Direct memory structure (like example_data)
+        memory_dirs = [d for d in subdirs if d.name.startswith("memory_")]
+        print(f"Found direct memory structure with {len(memory_dirs)} memory directories")
+    else:
+        # Instances structure with UUID folders
+        instance_count = 0
+        for instance_dir in subdirs:
+            if instance_dir.is_dir():
+                instance_memory_dirs = [d for d in instance_dir.iterdir() if d.is_dir() and d.name.startswith("memory_")]
+                memory_dirs.extend(instance_memory_dirs)
+                if instance_memory_dirs:
+                    instance_count += 1
+        
+        print(f"Found instances structure with {instance_count} instance folders containing {len(memory_dirs)} total memory directories")
     
     if not memory_dirs:
-        raise ValueError(f"No memory directories found in {example_data_dir}")
+        raise ValueError(f"No memory directories found in {data_dir}")
     
     # Sort for consistent ordering
     memory_dirs.sort(key=lambda x: x.name)
@@ -62,13 +79,13 @@ def load_static_memory(path: str) -> StaticMemory:
     except FileNotFoundError:
         raise FileNotFoundError(f"Static memory file not found at {path}")
 
-def instantiate_memory(memory_base_path: str = MEMORY_PATH, example_data_dir: str = "example_data"):
+def instantiate_memory(memory_base_path: str = MEMORY_PATH, data_dir: str = "instances"):
     """
-    Instantiate all memory directories from example_data.
+    Instantiate all memory directories from data directory (instances/ or example_data/).
     """
     try:
-        # Load all static memories from example_data
-        static_memories = load_all_static_memories(example_data_dir)
+        # Load all static memories from data directory
+        static_memories = load_all_static_memories(data_dir)
         
         print(f"Found {len(static_memories)} static memories to instantiate")
         
@@ -95,13 +112,13 @@ def instantiate_memory(memory_base_path: str = MEMORY_PATH, example_data_dir: st
         print(f"Error instantiating memories: {e}")
         raise
 
-def reset_all_memories(memory_base_path: str = MEMORY_PATH, example_data_dir: str = "example_data"):
+def reset_all_memories(memory_base_path: str = MEMORY_PATH, data_dir: str = "instances"):
     """
-    Reset all memory directories from example_data.
+    Reset all memory directories from data directory (instances/ or example_data/).
     """
     try:
-        # Load all static memories from example_data
-        static_memories = load_all_static_memories(example_data_dir)
+        # Load all static memories from data directory
+        static_memories = load_all_static_memories(data_dir)
         
         print(f"Resetting {len(static_memories)} memories...")
         
@@ -119,9 +136,9 @@ def reset_all_memories(memory_base_path: str = MEMORY_PATH, example_data_dir: st
 if __name__ == "__main__":
     import argparse
     
-    parser = argparse.ArgumentParser(description="Setup memory from example data")
-    parser.add_argument("--example_data_dir", default="example_data", 
-                       help="Directory containing memory_* subdirectories")
+    parser = argparse.ArgumentParser(description="Setup memory from data directory")
+    parser.add_argument("--data_dir", default="instances", 
+                       help="Directory containing memory_* subdirectories (instances/ or example_data/ structure)")
     parser.add_argument("--memory_path", default=MEMORY_PATH,
                        help="Base path where memories will be instantiated")
     parser.add_argument("--reset", action="store_true",
@@ -130,6 +147,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     if args.reset:
-        reset_all_memories(args.memory_path, args.example_data_dir)
+        reset_all_memories(args.memory_path, args.data_dir)
     else:
-        instantiate_memory(args.memory_path, args.example_data_dir)
+        instantiate_memory(args.memory_path, args.data_dir)
