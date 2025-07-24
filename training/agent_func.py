@@ -4,8 +4,8 @@ import json
 from agent.utils import extract_reply, extract_python_code, extract_thoughts, remove_all_thinks_except_last
 
 from training.action_processor import process_action_base
-from training.retrieval import calculate_retrieval_python_reward, calculate_retrieval_reply_reward
-from training.update import calculate_update_python_reward, calculate_update_reply_reward
+from training.retrieval import calculate_retrieval_reply_reward
+from training.update import calculate_update_reply_reward
 from training.utils import Task, TaskType, extract_task_from_label, format_agent_response
 
 import torch
@@ -79,12 +79,10 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
     # Extract the task from the label
     task: Task = extract_task_from_label(label)
 
-    # Select the appropriate reward calculators based on task type
+    # Select the appropriate reply reward calculator based on task type
     if task.task_type == TaskType.RETRIEVAL:
-        python_reward_calculator = calculate_retrieval_python_reward
         reply_reward_calculator = calculate_retrieval_reply_reward
     elif task.task_type == TaskType.UPDATE:
-        python_reward_calculator = calculate_update_python_reward
         reply_reward_calculator = calculate_update_reply_reward
     else:
         raise ValueError(f"Unknown task type: {task.task_type}")
@@ -99,7 +97,6 @@ async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
         task=task,
         thoughts_min_length=THOUGHTS_MIN_LENGTH,
         step_num=step_idx,
-        python_reward_calculator=python_reward_calculator,
         reply_reward_calculator=reply_reward_calculator
     )
         

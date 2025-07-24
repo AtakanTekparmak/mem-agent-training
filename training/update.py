@@ -1,12 +1,6 @@
 from training.utils import Task, extract_python_blocks
 from training.reward import get_update_reward
 
-
-def calculate_update_python_reward(python_code: str, step_num: int) -> float:
-    """Calculate reward for python actions in update tasks."""
-    return 0.15
-
-
 def calculate_update_reply_reward(observation: str, reply: str, task: Task) -> float:
     """Calculate reward for reply actions in update tasks."""
     python_blocks = extract_python_blocks(observation)

@@ -7,6 +7,33 @@ from training import MEMORY_PATH
 from training.utils import Task
 
 
+def calculate_python_reward(python_code: str, step_num: int) -> float:
+    """Calculate reward for python actions in all tasks."""
+    reward_addition = 0.15
+    if step_num == 0:
+        # check if inside the python code there is one of the following:
+        # 1. check_if_file_exists("user.md") or check_if_file_exists('user.md')
+        # 2. read_file("user.md") or read_file('user.md')
+        # We need the exact string match for these
+        desired_strings = [
+            "check_if_file_exists('user.md')",
+            "check_if_file_exists(\"user.md\")",
+            "read_file('user.md')",
+            "read_file(\"user.md\")",
+        ]
+
+        desired_strings_found = False
+        for string in desired_strings:
+            if string in python_code:
+                desired_strings_found = True
+                break
+
+        if desired_strings_found:
+            reward_addition += 0.2
+    
+    return reward_addition
+
+
 def process_action_base(
     observation: str,
     action: str,
@@ -16,7 +43,6 @@ def process_action_base(
     task: Task,
     thoughts_min_length: int,
     step_num: int,
-    python_reward_calculator: Callable[[str, int], float],
     reply_reward_calculator: Callable[[str, str, Task], float]
 ) -> Tuple[float, bool, str]:
     """
@@ -31,7 +57,6 @@ def process_action_base(
         task: The task object containing answer
         thoughts_min_length: Minimum length required for thoughts
         step_num: Current step number
-        python_reward_calculator: Function to calculate reward for python actions
         reply_reward_calculator: Function to calculate reward for reply actions
         
     Returns:
@@ -72,8 +97,8 @@ def process_action_base(
             ("\n<|im_start|>assistant\n<think>")
         )
 
-        # Use the provided python reward calculator
-        reward += python_reward_calculator(python_code, step_num)
+        # Use the internal python reward calculator
+        reward += calculate_python_reward(python_code, step_num)
         
     elif reply_exists:
         # Use the provided reply reward calculator
