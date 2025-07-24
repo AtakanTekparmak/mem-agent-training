@@ -25,6 +25,3 @@ memory/
 # .DS_Store
 .DS_Store
 **/.DS_Store
-
-# instances
-instances/
