@@ -1,12 +1,12 @@
 from typing import Dict, Any
 import json
 
-from agent.utils import extract_reply, extract_python_code, extract_thoughts, remove_all_thinks_except_last
+from agent.utils import extract_reply, extract_python_code, extract_thoughts
 
 from training.action_processor import process_action_base
 from training.retrieval import calculate_retrieval_reply_reward
 from training.update import calculate_update_reply_reward
-from training.utils import Task, TaskType, extract_task_from_label, format_agent_response
+from training.utils import Task, TaskType, extract_task_from_label, format_agent_response, remove_all_thinks_except_last
 
 import torch
 from vllm import SamplingParams
