@@ -1,15 +1,16 @@
-from typing import Dict, Any
+import random
+from typing import Any, Dict
 import json
 
-from agent.utils import extract_reply, extract_python_code, extract_thoughts
+import torch
+from openrlhf.utils.agent import AgentExecutorBase, AgentInstanceBase
+from vllm import SamplingParams
 
+from agent.utils import extract_reply, extract_python_code, extract_thoughts
 from training.action_processor import process_action_base
 from training.retrieval import calculate_retrieval_reply_reward
 from training.update import calculate_update_reply_reward
 from training.utils import Task, TaskType, extract_task_from_label, format_agent_response, remove_all_thinks_except_last
-
-import torch
-from vllm import SamplingParams
 
 # Load hyperparameters
 try:
@@ -19,102 +20,129 @@ try:
 except:
     raise ValueError("config.json not found or the thoughts_min_length key is not present in hyperparameters")
 
-# Global states for the environment
-step_idx = 0
-max_steps = 10
 
-async def step(observation, action, label, **kwargs) -> Dict[str, Any]:
-    """
-    Step function for the agent.
+class AgentInstance(AgentInstanceBase):
+    async def __init__(self, *args, **kwargs):
+        self.step_idx = 0
+        self.max_steps = 10
 
-    Args:
-        observation: The input prompt/expression
-        action: The language model's response
-        label: Agent identifier or additional information
+    async def reset(self, states: dict, **kwargs):
+        """Initialize the environment and return initial observation
 
-    Returns:
-        Dict[str, Any]: A dictionary containing:
-            - rewards: Reward value for advantage calculation
-            - scores: Reward value for dynamic filtering (same value as rewards for our case)
-            - next_observation: The updated observation after the step
-            - done: Boolean indicating if the episode is complete
-            - sampling_params: Parameters for vLLM sampling
-            - extra_logs: Additional logging information in dictionary format
-    """
-    global step_idx, max_steps
-    print(f"step_idx: {step_idx}, max_steps: {max_steps}")
+        Args:
+            states: Dictionary containing observation and label
 
-    if step_idx >= max_steps:
-        done = True
-        next_observation = (
-            observation + action +
-            "\n [WARNING] You have reached the maximum number of steps."
-        )
-        return {
-            "rewards": torch.tensor(0),
-            "scores": torch.tensor(0),
-            "next_observation": next_observation,
-            "done": done,
-            "sampling_params": kwargs.get("sampling_params", None),
-            "extra_logs": {},
-        }
-    
-    # Remove all the <think> blocks except the last one
-    observation = remove_all_thinks_except_last(observation)
-    
-    # Truncate the action after the closing tags
-    if "</python>" in action:
-        python_end_idx = action.find("</python>") + len("</python>")
-        action = action[:python_end_idx]
+        Returns:
+            dict: Initial state with observation
+        """
+        # Reset step counter for new episode
+        self.step_idx = 0
+        return {"observation": states["observation"]}
 
-    if "</reply>" in action:
-        reply_end_idx = action.find("</reply>") + len("</reply>")
-        action = action[:reply_end_idx]
+    async def step(self, states: dict, **kwargs) -> Dict[str, Any]:
+        """Execute one step of the agent interaction
 
-    # Extract the python code and reply
-    python_code = extract_python_code(action)
-    reply = extract_reply(action)
-    thoughts = extract_thoughts(action)
+        Args:
+            states: Dictionary containing observation_text, action_text, and label
 
-    # Extract the task from the label
-    task: Task = extract_task_from_label(label)
+        Returns:
+            Dict[str, Any]: A dictionary containing:
+                - rewards: Reward value for advantage calculation
+                - scores: Reward value for dynamic filtering
+                - environment_feedback: The environment feedback text
+                - done: Boolean indicating if the episode is complete
+                - sampling_params: Parameters for vLLM sampling
+                - extra_logs: Additional logging information
+        """
+        print(f"step_idx: {self.step_idx}, max_steps: {self.max_steps}")
 
-    # Select the appropriate reply reward calculator based on task type
-    if task.task_type == TaskType.RETRIEVAL:
-        reply_reward_calculator = calculate_retrieval_reply_reward
-    elif task.task_type == TaskType.UPDATE:
-        reply_reward_calculator = calculate_update_reply_reward
-    else:
-        raise ValueError(f"Unknown task type: {task.task_type}")
+        if self.step_idx >= self.max_steps:
+            done = True
+            environment_feedback = (
+                "\n [WARNING] You have reached the maximum number of steps."
+            )
+            return {
+                "rewards": torch.tensor(0.0),
+                "scores": torch.tensor(0.0),
+                "environment_feedback": environment_feedback,
+                "done": done,
+                "sampling_params": kwargs.get("sampling_params", None),
+                "extra_logs": {},
+            }
 
-    # Process the action using the shared base function
-    reward, done, next_observation = process_action_base(
-        observation=observation,
-        action=action,
-        python_code=python_code,
-        reply=reply,
-        thoughts=thoughts,
-        task=task,
-        thoughts_min_length=THOUGHTS_MIN_LENGTH,
-        step_num=step_idx,
-        reply_reward_calculator=reply_reward_calculator
-    )
+        observation_text = states["observation_text"]
+        action_text = states["action_text"]
+        label = states["label"]
+
+        # Remove all the <think> blocks except the last one
+        observation = remove_all_thinks_except_last(observation_text)
         
-    step_idx += 1
-    reward = torch.tensor(reward)
+        # Truncate the action after the closing tags
+        action = action_text
+        if "</python>" in action:
+            python_end_idx = action.find("</python>") + len("</python>")
+            action = action[:python_end_idx]
 
-    # Sampling parameters
-    sampling_params = kwargs.get("sampling_params", None)
-    if sampling_params is None:
-        sampling_params = SamplingParams(stop=["<result>"])
-    sampling_params.stop = ["<result>"]
+        if "</reply>" in action:
+            reply_end_idx = action.find("</reply>") + len("</reply>")
+            action = action[:reply_end_idx]
 
-    return {
-        "rewards": reward,
-        "scores": reward,
-        "next_observation": next_observation,
-        "done": done,
-        "sampling_params": sampling_params,
-        "extra_logs": {"formatted_response": format_agent_response(thoughts, python_code, reply, reward)},
-    }
+        # Extract the python code and reply
+        python_code = extract_python_code(action)
+        reply = extract_reply(action)
+        thoughts = extract_thoughts(action)
+
+        # Extract the task from the label
+        task: Task = extract_task_from_label(label)
+
+        # Select the appropriate reply reward calculator based on task type
+        if task.task_type == TaskType.RETRIEVAL:
+            reply_reward_calculator = calculate_retrieval_reply_reward
+        elif task.task_type == TaskType.UPDATE:
+            reply_reward_calculator = calculate_update_reply_reward
+        else:
+            raise ValueError(f"Unknown task type: {task.task_type}")
+
+        # Process the action using the shared base function
+        reward, done, next_observation = process_action_base(
+            observation=observation,
+            action=action,
+            python_code=python_code,
+            reply=reply,
+            thoughts=thoughts,
+            task=task,
+            thoughts_min_length=THOUGHTS_MIN_LENGTH,
+            step_num=self.step_idx,
+            reply_reward_calculator=reply_reward_calculator
+        )
+            
+        self.step_idx += 1
+        reward = torch.tensor(reward, dtype=torch.float32)
+
+        # Environment feedback is the difference between next_observation and current observation+action
+        environment_feedback = next_observation[len(observation + action):]
+
+        # Sampling parameters
+        sampling_params = kwargs.get("sampling_params", None)
+        if sampling_params is None:
+            sampling_params = SamplingParams(stop=["<result>"])
+        sampling_params.stop = ["<result>"]
+
+        return {
+            "rewards": reward,
+            "scores": reward,
+            "environment_feedback": environment_feedback,
+            "done": done,
+            "sampling_params": sampling_params,
+            "extra_logs": {"formatted_response": format_agent_response(thoughts, python_code, reply, reward)},
+        }
+
+
+class AgentExecutor(AgentExecutorBase):
+    def __init__(self, max_steps, max_length, llm_engine, hf_tokenizer, result_queue):
+        super().__init__(AgentInstance, max_steps, max_length, llm_engine, hf_tokenizer, result_queue)
+
+    async def execute(self, prompt, label, sampling_params):
+        # You can override the execute function to add custom agent running logic
+        return await super().execute(prompt, label, sampling_params)
     
