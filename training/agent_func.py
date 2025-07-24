@@ -134,7 +134,7 @@ class AgentInstance(AgentInstanceBase):
             "environment_feedback": environment_feedback,
             "done": done,
             "sampling_params": sampling_params,
-            "extra_logs": {"formatted_response": format_agent_response(thoughts, python_code, reply, reward)},
+            "extra_logs": {},
         }
 
 
