@@ -108,23 +108,60 @@ def _format_python_code_with_black(code: str) -> str:
     Returns:
         The formatted Python code, or original code if formatting fails
     """
+    if not code.strip():
+        return code
+        
     try:
-        # Use Black's format_str with minimal configuration for speed
+        # For incomplete code fragments, wrap them in a function to make them valid Python
+        # This helps Black parse and format them correctly
+        lines = code.strip().split('\n')
+        
+        # Check if code looks like complete statements or just expressions/fragments
+        needs_wrapping = True
+        for line in lines:
+            stripped = line.strip()
+            if (stripped.startswith(('def ', 'class ', 'import ', 'from ')) or 
+                stripped.startswith(('if ', 'for ', 'while ', 'try:', 'with ')) or
+                '=' in stripped or stripped.startswith(('print(', 'return '))):
+                needs_wrapping = False
+                break
+        
+        if needs_wrapping:
+            # Wrap in a function to make it valid Python for Black
+            wrapped_code = f"def temp_function():\n" + "\n".join(f"    {line}" for line in lines)
+            
+            try:
+                formatted_wrapped = black.format_str(
+                    wrapped_code,
+                    mode=black.FileMode(
+                        line_length=88,
+                        string_normalization=True,
+                        is_pyi=False,
+                    )
+                )
+                # Extract the formatted content back out, removing the wrapper
+                formatted_lines = formatted_wrapped.split('\n')[1:]  # Skip "def temp_function():"
+                formatted_code = '\n'.join(line[4:] if line.startswith('    ') else line 
+                                         for line in formatted_lines if line.strip()).strip()
+                return formatted_code
+            except:
+                # If wrapping fails, try formatting as-is
+                pass
+        
+        # Try formatting the code as-is
         formatted_code = black.format_str(
             code, 
             mode=black.FileMode(
-                line_length=88,  # Black's default
+                line_length=88,
                 string_normalization=True,
                 is_pyi=False,
             )
         )
         return formatted_code
-    except (black.InvalidInput, black.parsing.ParserError, ValueError, SyntaxError) as e:
+        
+    except (black.InvalidInput, ValueError, SyntaxError, Exception) as e:
         # If Black fails to format (e.g., invalid syntax), return original code
         # This ensures we don't break the training pipeline
-        return code
-    except Exception as e:
-        # Catch any other unexpected errors and fallback to original code
         return code
 
 
