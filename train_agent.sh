@@ -24,7 +24,7 @@ with open(config_file, 'r') as f:
 hp = config['hyperparameters']
 model_name = config['model']['name']
 
-# Extract model identifier (e.g., 'Qwen/Qwen3-8B' -> 'qwen3-8b')
+# Extract model identifier (e.g., 'Qwen/Qwen2.5-Coder-7B-Instruct' -> 'qwen2.5-coder-7b-instruct')
 model_id = model_name.split('/')[-1].lower().replace('-', '-')
 
 # Construct dynamic path

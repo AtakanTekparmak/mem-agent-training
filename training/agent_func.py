@@ -10,7 +10,7 @@ from agent.utils import extract_reply, extract_python_code, extract_thoughts
 from training.action_processor import process_action_base
 from training.retrieval import calculate_retrieval_reply_reward
 from training.update import calculate_update_reply_reward
-from training.utils import Task, TaskType, extract_task_from_label, format_agent_response, remove_all_thinks_except_last
+from training.utils import Task, TaskType, extract_task_from_label, remove_all_thinks_except_last
 
 # Load hyperparameters
 try:
@@ -75,7 +75,8 @@ class AgentInstance(AgentInstanceBase):
         label = states["label"]
 
         # Remove all the <think> blocks except the last one
-        observation = remove_all_thinks_except_last(observation_text)
+        #observation = remove_all_thinks_except_last(observation_text)
+        observation = observation_text
         
         # Truncate the action after the closing tags
         # This preserves all action blocks (including empty ones) by finding the last closing tag
