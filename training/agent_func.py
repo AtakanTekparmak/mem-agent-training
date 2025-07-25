@@ -78,14 +78,24 @@ class AgentInstance(AgentInstanceBase):
         observation = remove_all_thinks_except_last(observation_text)
         
         # Truncate the action after the closing tags
+        # This preserves all action blocks (including empty ones) by finding the last closing tag
         action = action_text
+        
+        # Find the positions of both closing tags
+        python_end_pos = -1
+        reply_end_pos = -1
+        
         if "</python>" in action:
-            python_end_idx = action.find("</python>") + len("</python>")
-            action = action[:python_end_idx]
-
+            python_end_pos = action.find("</python>") + len("</python>")
+            
         if "</reply>" in action:
-            reply_end_idx = action.find("</reply>") + len("</reply>")
-            action = action[:reply_end_idx]
+            reply_end_pos = action.find("</reply>") + len("</reply>")
+        
+        # Truncate at the position of whichever tag appears last
+        # This ensures both blocks are preserved, even if one is empty
+        if python_end_pos > 0 or reply_end_pos > 0:
+            truncate_pos = max(python_end_pos, reply_end_pos)
+            action = action[:truncate_pos]
 
         # Extract the python code and reply
         python_code = extract_python_code(action)
