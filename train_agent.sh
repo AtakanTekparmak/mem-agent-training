@@ -80,7 +80,7 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --max_epochs $MAX_EPOCHS \
    --prompt_max_len 4096 \
    --max_samples 100000 \
-   --generate_max_len 4096 \
+   --generate_max_len 2048 \
    --zero_stage 3 \
    --bf16 \
    --actor_learning_rate $ACTOR_LR \
