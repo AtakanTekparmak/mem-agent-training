@@ -78,10 +78,10 @@ def process_action_base(
     if python_code_exists and reply_exists:
         next_observation = (
             observation + action + 
-            "\n<|im_start|>user\n" +
+            "\nuser\n" +
             "\n [ERROR] Choose one action: either explore with <python> ... </python> OR provide final answer with <reply> ... </reply>." +
             "\n [HINT] If you haven't found the answer yet, use <python> to interact with the memory. If you're confident, use <reply>." +
-            "\n<|im_start|>assistant\n<think>"
+            "\nassistant\n"
         )
     elif python_code_exists:
         local_vars, error_msg = execute_sandboxed_code(
@@ -92,9 +92,9 @@ def process_action_base(
 
         next_observation = (
             observation + action +
-            "\n<|im_start|>user\n" +
+            "\nuser\n" +
             format_results(local_vars, error_msg) +
-            ("\n<|im_start|>assistant\n<think>")
+            ("\nassistant\n")
         )
 
         # Use the internal python reward calculator
@@ -106,18 +106,18 @@ def process_action_base(
         done = True
 
         next_observation = (
-            observation + action + "\n<|im_end|>"
+            observation + action + "\n"
         )
     else:
         # Handle the case where the model output didn't contain a recognised
         # block so that `next_observation` is always defined.
         next_observation = (
             observation + action +
-            "\n<|im_start|>user\n" +
+            "\nuser\n" +
             "\n [ERROR] Missing action blocks. You must either:" +
             "\n   1. Use <python>...</python> to interact with the memory" +
             "\n   2. Use <reply>...</reply> to provide your final answer to the user" +
-            "\n<|im_start|>assistant\n<think>"
+            "\nassistant\n"
         )
 
     # If reward is higher than 1, set it to 1

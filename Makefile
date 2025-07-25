@@ -35,6 +35,13 @@ install:
 	else \
 		echo "ninja is already installed"; \
 	fi
+	@echo "Ensuring black is installed..."
+	@if ! uv pip freeze | grep -q "^black=="; then \
+		echo "black not found. Installing black..."; \
+		uv pip install black; \
+	else \
+		echo "black is already installed"; \
+	fi
 
 setup-memory:
 	uv run python setup_memory.py

@@ -1,6 +1,8 @@
 import os
 import shutil
 
+import black
+
 from agent.settings import (
     SYSTEM_PROMPT_PATH,
     FILE_SIZE_LIMIT,
@@ -96,22 +98,55 @@ def delete_memory(path: str = MEMORY_PATH) -> None:
         shutil.rmtree(path)
 
 
+def _format_python_code_with_black(code: str) -> str:
+    """
+    Format Python code using Black formatter.
+    
+    Args:
+        code: The Python code to format
+        
+    Returns:
+        The formatted Python code, or original code if formatting fails
+    """
+    try:
+        # Use Black's format_str with minimal configuration for speed
+        formatted_code = black.format_str(
+            code, 
+            mode=black.FileMode(
+                line_length=88,  # Black's default
+                string_normalization=True,
+                is_pyi=False,
+            )
+        )
+        return formatted_code
+    except (black.InvalidInput, black.parsing.ParserError, ValueError, SyntaxError) as e:
+        # If Black fails to format (e.g., invalid syntax), return original code
+        # This ensures we don't break the training pipeline
+        return code
+    except Exception as e:
+        # Catch any other unexpected errors and fallback to original code
+        return code
+
+
 def extract_python_code(response: str) -> str:
     """
-    Extract the python code from the response.
+    Extract the python code from the response and format it with Black.
 
     Args:
         response: The response from the model.
 
     Returns:
-        The python code from the response.
+        The formatted python code from the response.
     """
     if "<python>" in response and "</python>" in response:
         response = response.split("<python>")[1].split("</python>")[0]
         if "```" in response:
-            return response.split("```")[1].split("```")[0]
+            code = response.split("```")[1].split("```")[0]
         else:
-            return response
+            code = response
+        
+        # Format the extracted code with Black
+        return _format_python_code_with_black(code)
     else:
         return ""
 

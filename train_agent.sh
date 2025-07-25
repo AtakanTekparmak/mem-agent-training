@@ -64,7 +64,7 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --init_kl_coef $INIT_KL_COEF \
    --kl_target $KL_TARGET \
    --kl_horizon $KL_HORIZON \
-   --gamma 1.0 \
+   --gamma 0.99 \
    --kl_estimator k3 \
    --pretrain $MODEL_NAME \
    --agent_func_path training/agent_func.py \
@@ -89,6 +89,7 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --input_key context_messages \
    --label_key label \
    --apply_chat_template \
+   --use_kl_loss \
    --gradient_checkpointing \
    --packing_samples \
    --vllm_sync_backend nccl \

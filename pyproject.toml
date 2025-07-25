@@ -13,4 +13,5 @@ dependencies = [
     "torch",
     "wandb",
     "ninja",
+    "black",
 ]

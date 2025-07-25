@@ -142,6 +142,7 @@ go_to_link(link_string: str) -> bool
    ```
 9. **Wait for Results**: After submitting Python code, wait for `<result>` blocks before proceeding
 10. **Error Handling**: Use try-except blocks for file operations when appropriate
+11. **Your `<python>` block MUST compile under `ast.parse` and yield no `SyntaxError`**  
 
 ## Memory Maintenance
 
