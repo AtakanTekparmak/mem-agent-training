@@ -12,12 +12,41 @@ def get_size(file_or_dir_path: str) -> int:
     Get the size of a file or directory.
 
     Args:
-        file_or_dir_path: The path to the file or directory.
+        file_or_dir_path: The path to the file or directory. 
+                          If empty string, returns total memory directory size.
 
     Returns:
         The size of the file or directory in bytes.
     """
-    return os.path.getsize(file_or_dir_path)
+    # Handle empty string by returning total memory size
+    if not file_or_dir_path or file_or_dir_path == "":
+        # Get the current working directory (which should be the memory root)
+        cwd = os.getcwd()
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(cwd):
+            for filename in filenames:
+                file_path = os.path.join(dirpath, filename)
+                try:
+                    total_size += os.path.getsize(file_path)
+                except OSError:
+                    pass
+        return total_size
+    
+    # Otherwise check the specific path
+    if os.path.isfile(file_or_dir_path):
+        return os.path.getsize(file_or_dir_path)
+    elif os.path.isdir(file_or_dir_path):
+        total_size = 0
+        for dirpath, dirnames, filenames in os.walk(file_or_dir_path):
+            for filename in filenames:
+                file_path = os.path.join(dirpath, filename)
+                try:
+                    total_size += os.path.getsize(file_path)
+                except OSError:
+                    pass
+        return total_size
+    else:
+        raise FileNotFoundError(f"Path not found: {file_or_dir_path}")
 
 def create_file(file_path: str, content: str = "") -> bool:
     """
@@ -88,12 +117,16 @@ def write_to_file(file_path: str, diff: str) -> bool:
     # Guarantee we run in the directory that contains the target file.
     workdir = Path(file_path).expanduser().resolve().parent
 
-    # Stash the diff text in a temp file; Git only reads from disk.
-    with tempfile.NamedTemporaryFile("w+", delete=False) as tmp:
-        tmp.write(diff)
-        patch_file = tmp.name
+    # Create the temp file in the workdir instead of system /tmp
+    # This ensures it's within the sandbox's allowed path
+    temp_file_path = workdir / f"temp_patch_{uuid.uuid4().hex[:8]}.patch"
 
     try:
+        # Write the diff to the temp file
+        with open(temp_file_path, "w") as tmp:
+            tmp.write(diff)
+        patch_file = str(temp_file_path)
+
         # 1. Dry-run check ─ will fail (non-zero return-code) on any conflict.
         check = subprocess.run(
             ["git", "apply", "--check", "--unsafe-paths", patch_file],
@@ -114,7 +147,9 @@ def write_to_file(file_path: str, diff: str) -> bool:
         )
         return apply.returncode == 0
     finally:
-        os.remove(patch_file)
+        # Clean up the temp file
+        if os.path.exists(patch_file):
+            os.remove(patch_file)
     
 def read_file(file_path: str) -> str:
     """
