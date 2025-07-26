@@ -73,9 +73,9 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --advantage_estimator $ADVANTAGE_ESTIMATOR \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
-   --train_batch_size 16 \
+   --train_batch_size 32 \
    --micro_rollout_batch_size 2 \
-   --rollout_batch_size 16 \
+   --rollout_batch_size 32 \
    --n_samples_per_prompt 4 \
    --max_epochs $MAX_EPOCHS \
    --prompt_max_len 4096 \

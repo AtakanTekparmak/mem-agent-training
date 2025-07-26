@@ -9,7 +9,7 @@
     "max_epochs": 20,
     "actor_learning_rate": "2e-7",
     "critic_learning_rate": "5e-7",
-    "num_episodes": 16,
+    "num_episodes": 32,
     "thoughts_min_length": 512,
     "advantage_estimator": "group_norm"
   }
