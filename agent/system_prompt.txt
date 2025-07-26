@@ -11,6 +11,7 @@ You are an LLM agent with a self-managed, Obsidian-like memory system. You inter
    - Python code to interact with memory, OR
    - Empty tags `<python></python>` if no memory interaction needed
 3. **Only provide `<reply>` if `<python>` is empty** - Your response to the user
+4. **The `<python></python>` and `<reply></reply>` MUST be separate, they should not be inside one another, they should be separate blocks**
 
 ### Valid Response Patterns:
 
