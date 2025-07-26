@@ -141,22 +141,18 @@ def reset_memory_for_episode(memory_id: str, instances_dir: str = "instances") -
             
             # Check if memory is already fresh (optimization to avoid unnecessary resets)
             if is_memory_fresh(memory_id, expected_content_hash):
-                print(f"Memory {memory_id} already fresh, skipping reset")
                 return True
             
             # Reset the memory: manually remove existing files and recreate
             memory_full_path = os.path.join(MEMORY_PATH, memory_id)
-            print(f"Resetting memory: {memory_id} at {memory_full_path}")
             
             # Remove existing memory directory if it exists
             if os.path.exists(memory_full_path):
                 import shutil
                 shutil.rmtree(memory_full_path)
-                print(f"Removed existing memory directory: {memory_full_path}")
             
             # Use instantiate to create fresh memory (this adds memory_id to path correctly)
             static_memory.instantiate(MEMORY_PATH)
-            print(f"Successfully reset memory {memory_id}")
             
             return True
             
