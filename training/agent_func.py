@@ -18,9 +18,9 @@ from training.update import calculate_update_reply_reward
 from training.utils import Task, TaskType, extract_task_from_label, remove_all_thinks_except_last
 from training import MEMORY_PATH
 
-# Global lock dictionary for memory reset synchronization
-_memory_locks = {}
-_locks_lock = threading.Lock()
+# Per-worker lock dictionaries (initialized lazily to avoid Ray serialization issues)
+_memory_locks = None
+_locks_lock = None
 
 # Load hyperparameters
 try:
@@ -35,6 +35,7 @@ def get_memory_lock(memory_id: str) -> threading.Lock:
     """
     Get or create a lock for a specific memory ID.
     Thread-safe creation of per-memory locks.
+    Initializes per-worker locks lazily to avoid Ray serialization issues.
     
     Args:
         memory_id: The memory ID to get a lock for
@@ -42,6 +43,14 @@ def get_memory_lock(memory_id: str) -> threading.Lock:
     Returns:
         threading.Lock: A lock specific to this memory_id
     """
+    global _memory_locks, _locks_lock
+    
+    # Initialize locks lazily per worker to avoid Ray serialization issues
+    if _locks_lock is None:
+        _locks_lock = threading.Lock()
+    if _memory_locks is None:
+        _memory_locks = {}
+    
     with _locks_lock:
         if memory_id not in _memory_locks:
             _memory_locks[memory_id] = threading.Lock()
