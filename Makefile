@@ -10,7 +10,8 @@ help:
 	@echo "  1. help - Show this help message"
 	@echo "  2. check-uv - Check if uv is installed and install if needed"
 	@echo "  3. install - Install dependencies using uv"
-	@echo "  4. train - Run the training script"
+	@echo "  4. setup-memory - Setup memory from instances"
+	@echo "  5. train - Run the training script"
 
 # Check if uv is installed and install if needed
 check-uv:

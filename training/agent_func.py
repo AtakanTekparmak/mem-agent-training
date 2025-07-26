@@ -1,16 +1,26 @@
 import random
 from typing import Any, Dict
 import json
+import os
+import pathlib
+import threading
+import hashlib
 
 import torch
 from openrlhf.utils.agent import AgentExecutorBase, AgentInstanceBase
 from vllm import SamplingParams
 
 from agent.utils import extract_reply, extract_python_code, extract_thoughts
+from agent.schemas import StaticMemory
 from training.action_processor import process_action_base
 from training.retrieval import calculate_retrieval_reply_reward
 from training.update import calculate_update_reply_reward
 from training.utils import Task, TaskType, extract_task_from_label, remove_all_thinks_except_last
+from training import MEMORY_PATH
+
+# Global lock dictionary for memory reset synchronization
+_memory_locks = {}
+_locks_lock = threading.Lock()
 
 # Load hyperparameters
 try:
@@ -19,6 +29,131 @@ try:
         THOUGHTS_MIN_LENGTH = config["hyperparameters"]["thoughts_min_length"]
 except:
     raise ValueError("config.json not found or the thoughts_min_length key is not present in hyperparameters")
+
+
+def get_memory_lock(memory_id: str) -> threading.Lock:
+    """
+    Get or create a lock for a specific memory ID.
+    Thread-safe creation of per-memory locks.
+    
+    Args:
+        memory_id: The memory ID to get a lock for
+        
+    Returns:
+        threading.Lock: A lock specific to this memory_id
+    """
+    with _locks_lock:
+        if memory_id not in _memory_locks:
+            _memory_locks[memory_id] = threading.Lock()
+        return _memory_locks[memory_id]
+
+
+def is_memory_fresh(memory_id: str, expected_content_hash: str) -> bool:
+    """
+    Check if memory is already in the expected fresh state.
+    
+    Args:
+        memory_id: The memory ID to check
+        expected_content_hash: Hash of expected user.md content
+        
+    Returns:
+        bool: True if memory is already fresh
+    """
+    try:
+        memory_path = os.path.join(MEMORY_PATH, memory_id)
+        user_md_path = os.path.join(memory_path, "user.md")
+        
+        if not os.path.exists(user_md_path):
+            return False
+            
+        # Read current content and hash it
+        with open(user_md_path, "r", encoding="utf-8") as f:
+            current_content = f.read()
+        
+        current_hash = hashlib.md5(current_content.encode()).hexdigest()
+        return current_hash == expected_content_hash
+        
+    except Exception:
+        return False
+
+
+def reset_memory_for_episode(memory_id: str, instances_dir: str = "instances") -> bool:
+    """
+    Thread-safe reset of a specific memory to its original state before training episode.
+    Uses per-memory locks to prevent race conditions in async training.
+    
+    Args:
+        memory_id: The memory ID to reset (e.g., 'memory_f707bc1c8e7848cc991394760ca9005b')
+        instances_dir: Directory containing the original memory instances
+    
+    Returns:
+        bool: True if reset successful, False otherwise
+    """
+    # Get the lock for this specific memory_id
+    memory_lock = get_memory_lock(memory_id)
+    
+    with memory_lock:  # Only one agent can reset this memory at a time
+        try:
+            # Find the memory directory in instances
+            instances_path = pathlib.Path(instances_dir)
+            if not instances_path.exists():
+                print(f"Warning: Instances directory not found: {instances_dir}")
+                return False
+            
+            # Search for the memory in all instance folders
+            memory_dir = None
+            for instance_dir in instances_path.iterdir():
+                if instance_dir.is_dir():
+                    potential_memory_dir = instance_dir / memory_id
+                    if potential_memory_dir.exists():
+                        memory_dir = potential_memory_dir
+                        break
+            
+            if not memory_dir:
+                print(f"Warning: Memory {memory_id} not found in instances")
+                return False
+            
+            # Load the base memory
+            base_memory_path = memory_dir / "base_memory.json"
+            if not base_memory_path.exists():
+                print(f"Warning: base_memory.json not found in {memory_dir}")
+                return False
+            
+            # Load and validate the static memory
+            with open(base_memory_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                # Convert mem_id to memory_id to match StaticMemory schema
+                if "mem_id" in data:
+                    data["memory_id"] = data.pop("mem_id")
+                static_memory = StaticMemory.model_validate(data)
+            
+            # Calculate expected content hash
+            expected_content_hash = hashlib.md5(static_memory.user_md.encode()).hexdigest()
+            
+            # Check if memory is already fresh (optimization to avoid unnecessary resets)
+            if is_memory_fresh(memory_id, expected_content_hash):
+                print(f"Memory {memory_id} already fresh, skipping reset")
+                return True
+            
+            # Reset the memory: manually remove existing files and recreate
+            memory_full_path = os.path.join(MEMORY_PATH, memory_id)
+            print(f"Resetting memory: {memory_id} at {memory_full_path}")
+            
+            # Remove existing memory directory if it exists
+            if os.path.exists(memory_full_path):
+                import shutil
+                shutil.rmtree(memory_full_path)
+                print(f"Removed existing memory directory: {memory_full_path}")
+            
+            # Use instantiate to create fresh memory (this adds memory_id to path correctly)
+            static_memory.instantiate(MEMORY_PATH)
+            print(f"Successfully reset memory {memory_id}")
+            
+            return True
+            
+        except Exception as e:
+            print(f"Error resetting memory {memory_id}: {e}")
+            return False
 
 
 class AgentInstance(AgentInstanceBase):
@@ -37,6 +172,26 @@ class AgentInstance(AgentInstanceBase):
         """
         # Reset step counter for new episode
         self.step_idx = 0
+        
+        # Extract memory ID from label and reset memory state
+        label = states.get("label", "")
+        if label:
+            try:
+                # Extract task to get memory ID
+                task = extract_task_from_label(label)
+                memory_id = task.mem_id
+                
+                if memory_id:
+                    # Reset the specific memory to its original state
+                    success = reset_memory_for_episode(memory_id)
+                    if not success:
+                        print(f"❌ Warning: Failed to reset memory {memory_id}")
+                else:
+                    print("⚠️  Warning: No memory ID found in label")
+                        
+            except Exception as e:
+                print(f"Warning: Could not extract memory ID from label: {e}")
+        
         return {"observation": states["observation"]}
 
     async def step(self, states: dict, **kwargs) -> Dict[str, Any]:
