@@ -3,12 +3,12 @@
     "name": "Qwen/Qwen2.5-Coder-7B-Instruct"
   },
   "hyperparameters": {
-    "init_kl_coef": 0.04,
+    "init_kl_coef": 0.1,
     "kl_target": 0.02,
     "kl_horizon": 256,
     "max_epochs": 20,
-    "actor_learning_rate": "5e-7",
-    "critic_learning_rate": "9e-6",
+    "actor_learning_rate": "2e-7",
+    "critic_learning_rate": "5e-7",
     "num_episodes": 16,
     "thoughts_min_length": 512,
     "advantage_estimator": "group_norm"

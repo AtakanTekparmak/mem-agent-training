@@ -10,4 +10,4 @@ def calculate_update_reply_reward(observation: str, reply: str, task: Task) -> f
         diff=diff,
         debug=True
     )
-    return max(0.1, reward)
+    return reward

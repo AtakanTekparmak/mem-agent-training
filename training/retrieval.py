@@ -4,4 +4,4 @@ from training.utils import Task, extract_question
 def calculate_retrieval_reply_reward(observation: str, reply: str, task: Task) -> float:
     """Calculate reward for reply actions in retrieval tasks."""
     question = extract_question(observation)
-    return max(0.1, get_retrieval_reward(question, reply, task.answer))
+    return get_retrieval_reward(question, reply, task.answer)

@@ -122,5 +122,6 @@ def process_action_base(
 
     # If reward is higher than 1, set it to 1
     reward = min(reward, 1.0)
+    reward = max(reward, 0.0)
     
     return reward, done, next_observation 
