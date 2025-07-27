@@ -312,11 +312,8 @@ class AgentInstance(AgentInstanceBase):
 class AgentExecutor(AgentExecutorBase):
     def __init__(self, max_steps, max_length, llm_engine, hf_tokenizer, result_queue):
         super().__init__(AgentInstance, max_steps, max_length, llm_engine, hf_tokenizer, result_queue)
-        self.allowed_token_ids = list(range(self.hf_tokenizer.vocab_size))
 
     async def execute(self, prompt, label, sampling_params):
         # You can override the execute function to add custom agent running logic
-        if getattr(sampling_params, "allowed_token_ids", None) is None:
-            sampling_params.allowed_token_ids = self.allowed_token_ids
         return await super().execute(prompt, label, sampling_params)
     
