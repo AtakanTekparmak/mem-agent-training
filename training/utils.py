@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 # Define constants
 DELIMITER = "\n\n~/~/~/~/~/~/~/~/~/~/~/~\n\n"
+MAX_STEPS = 8
 
 class TaskType(Enum):
     RETRIEVAL = "retrieval"

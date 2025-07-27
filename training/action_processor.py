@@ -4,12 +4,15 @@ from typing import Callable, Tuple
 from agent.utils import format_results
 from agent.engine import execute_sandboxed_code
 from training import MEMORY_PATH
-from training.utils import Task
+from training.utils import Task, MAX_STEPS
 
 
 def calculate_python_reward(python_code: str, step_num: int) -> float:
     """Calculate reward for python actions in all tasks."""
-    reward_addition = 0.15
+    # Scale down reward based on step number - at MAX_STEPS/2, reward becomes 0
+    scaling_factor = max(0.0, 1.0 - (2 * step_num / MAX_STEPS))
+    
+    reward_addition = 0.15 * scaling_factor
     if step_num == 0:
         # check if inside the python code there is one of the following:
         # 1. check_if_file_exists("user.md") or check_if_file_exists('user.md')
@@ -29,7 +32,7 @@ def calculate_python_reward(python_code: str, step_num: int) -> float:
                 break
 
         if desired_strings_found:
-            reward_addition += 0.2
+            reward_addition += 0.2 * scaling_factor
     
     return reward_addition
 
@@ -68,10 +71,17 @@ def process_action_base(
     thoughts_exists = len(thoughts.strip()) > 0
     thoughts_long_enough = len(thoughts.strip()) > thoughts_min_length
 
+    # Calculate thoughts reward scaling factor
+    # Steep decrease to 0.2 coefficient until half MAX_STEPS, then slow decrease to 0
+    if step_num <= MAX_STEPS / 2:
+        thoughts_scaling_factor = 1.0 - 0.8 * (step_num / (MAX_STEPS / 2))
+    else:
+        thoughts_scaling_factor = 0.2 * (1 - (step_num - MAX_STEPS / 2) / (MAX_STEPS / 2))
+    
     # Initialize the reward and done flag
-    reward = 0.05 if thoughts_exists else 0.0
+    reward = (0.05 if thoughts_exists else 0.0) * thoughts_scaling_factor
     if thoughts_long_enough:
-        reward += 0.05
+        reward += 0.05 * thoughts_scaling_factor
 
     done = False
 

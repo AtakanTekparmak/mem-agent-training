@@ -15,7 +15,7 @@ from agent.schemas import StaticMemory
 from training.action_processor import process_action_base
 from training.retrieval import calculate_retrieval_reply_reward
 from training.update import calculate_update_reply_reward
-from training.utils import Task, TaskType, extract_task_from_label, remove_all_thinks_except_last
+from training.utils import Task, TaskType, extract_task_from_label, MAX_STEPS
 from training import MEMORY_PATH
 
 # Per-worker lock dictionaries (initialized lazily to avoid Ray serialization issues)
@@ -164,7 +164,7 @@ def reset_memory_for_episode(memory_id: str, instances_dir: str = "instances") -
 class AgentInstance(AgentInstanceBase):
     async def __init__(self, *args, **kwargs):
         self.step_idx = 0
-        self.max_steps = 10
+        self.max_steps = MAX_STEPS
 
     async def reset(self, states: dict, **kwargs):
         """Initialize the environment and return initial observation
