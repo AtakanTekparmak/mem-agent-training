@@ -2,7 +2,7 @@
 set -x
 export PATH="$(dirname "$0")/.venv/bin:$PATH"
 export NINJA="$(dirname "$0")/.venv/bin/ninja"
-export VLLM_USE_V1=0
+
 
 # Read config from JSON file
 CONFIG_FILE="$(dirname "$0")/config.json"

@@ -313,7 +313,28 @@ class AgentExecutor(AgentExecutorBase):
     def __init__(self, max_steps, max_length, llm_engine, hf_tokenizer, result_queue):
         super().__init__(AgentInstance, max_steps, max_length, llm_engine, hf_tokenizer, result_queue)
 
+        # vLLM can occasionally output token ids greater than the tokenizer's
+        # vocabulary size when using Qwen2.5 models. This leads to runtime
+        # "Token id xxx is out of vocabulary" errors (see
+        # https://github.com/vllm-project/vllm/issues/13175).  We mitigate this
+        # by masking logits for ids outside the tokenizer vocabulary.
+        import functools
+
+        def _mask_oov(token_ids, logits, vocab_size):
+            if logits.shape[-1] > vocab_size:
+                logits[vocab_size:] = float("-inf")
+            return logits
+
+        self._oov_processor = functools.partial(
+            _mask_oov, vocab_size=self.hf_tokenizer.vocab_size
+        )
+
     async def execute(self, prompt, label, sampling_params):
         # You can override the execute function to add custom agent running logic
+        # Ensure our logits processor is applied for every request
+        if getattr(sampling_params, "logits_processors", None) is None:
+            sampling_params.logits_processors = [self._oov_processor]
+        elif self._oov_processor not in sampling_params.logits_processors:
+            sampling_params.logits_processors.append(self._oov_processor)
         return await super().execute(prompt, label, sampling_params)
     
