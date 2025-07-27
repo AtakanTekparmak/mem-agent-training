@@ -222,8 +222,8 @@ class AgentInstance(AgentInstanceBase):
                 "\n [WARNING] You have reached the maximum number of steps."
             )
             return {
-                "rewards": torch.tensor(0.0),
-                "scores": torch.tensor(0.0),
+                "rewards": torch.tensor(-0.2),
+                "scores": torch.tensor(-0.2),
                 "environment_feedback": environment_feedback,
                 "done": done,
                 "sampling_params": kwargs.get("sampling_params", None),
