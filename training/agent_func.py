@@ -15,7 +15,7 @@ from agent.schemas import StaticMemory
 from training.action_processor import process_action_base
 from training.retrieval import calculate_retrieval_reply_reward
 from training.update import calculate_update_reply_reward
-from training.utils import Task, TaskType, extract_task_from_label, MAX_STEPS
+from training.utils import Task, TaskType, extract_task_from_label, remove_all_thinks_except_last, MAX_STEPS
 from training import MEMORY_PATH
 
 # Per-worker lock dictionaries (initialized lazily to avoid Ray serialization issues)
@@ -235,8 +235,8 @@ class AgentInstance(AgentInstanceBase):
         label = states["label"]
 
         # Remove all the <think> blocks except the last one
-        #observation = remove_all_thinks_except_last(observation_text)
-        observation = observation_text
+        observation = remove_all_thinks_except_last(observation_text)
+        #observation = observation_text
         
         # Truncate the action after the closing tags
         # This preserves all action blocks (including empty ones) by finding the last closing tag

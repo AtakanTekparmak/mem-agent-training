@@ -1,6 +1,6 @@
 {
   "model": {
-    "name": "Qwen/Qwen2.5-Coder-7B-Instruct"
+    "name": "Qwen/Qwen3-8B"
   },
   "hyperparameters": {
     "init_kl_coef": 0.1,
