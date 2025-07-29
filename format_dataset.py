@@ -72,7 +72,7 @@ def process_retrieval_questions(memory_data: Dict[str, Any], sys_prompt: str) ->
                         record = {
                             "context_messages": [
                                 {"role": "system", "content": sys_prompt},
-                                {"role": "user", "content": q + " /think"}
+                                {"role": "user", "content": q}
                             ],
                             "label": construct_label(TaskType.RETRIEVAL, item["a"], memory_id)
                         }
@@ -108,7 +108,7 @@ def process_update_queries(memory_data: Dict[str, Any], sys_prompt: str) -> List
                 record = {
                     "context_messages": [
                         {"role": "system", "content": sys_prompt},
-                        {"role": "user", "content": item["query"] + " /think"}
+                        {"role": "user", "content": item["query"]}
                     ],
                     "label": construct_label(TaskType.UPDATE, item["diff"], memory_id)
                 }
