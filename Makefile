@@ -11,7 +11,8 @@ help:
 	@echo "  2. check-uv - Check if uv is installed and install if needed"
 	@echo "  3. install - Install dependencies using uv"
 	@echo "  4. setup-memory - Setup memory from instances"
-	@echo "  5. train - Run the training script"
+	@echo "  5. remove-vllm-error - Remove vllm error check"
+	@echo "  6. train - Run the training script"
 
 # Check if uv is installed and install if needed
 check-uv:
@@ -47,10 +48,11 @@ install:
 setup-memory:
 	uv run python setup_memory.py
 
+remove-vllm-error:
+	uv run python remove_vllm_error.py
+
 # Run the training script
 train:
-	@echo "Removing vllm error check..."
-	uv run python remove_vllm_error.py
 	@echo "Starting training..."
 	chmod +x train_agent.sh
 	WANDB_API_KEY=$(WANDB_API_KEY) ./train_agent.sh
