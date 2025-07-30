@@ -49,7 +49,7 @@ setup-memory:
 	uv run python setup_memory.py
 
 remove-vllm-error:
-	python remove_vllm_error.py
+	python3 remove_vllm_error.py
 
 # Run the training script
 train:
