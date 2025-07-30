@@ -22,8 +22,10 @@ def remove_vllm_error():
         if "if max_input_id > tokenizer.max_token_id:" in line:
             lines_to_remove.append(i)
             # Also remove the next line which contains the ValueError
-            if i + 1 < len(lines) and "raise ValueError" in lines[i + 1] and "out of vocabulary" in lines[i + 1]:
+            if i + 1 < len(lines) and "raise ValueError" in lines[i + 1]:
                 lines_to_remove.append(i + 1)
+            if i + 2 < len(lines) and "is out of vocabulary" in lines[i + 2]:
+                lines_to_remove.append(i + 2)
     
     if lines_to_remove:
         print(f"Removing lines {[i+1 for i in lines_to_remove]} from {file_path}")
