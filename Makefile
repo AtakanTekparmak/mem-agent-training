@@ -49,6 +49,8 @@ setup-memory:
 
 # Run the training script
 train:
+	@echo "Removing vllm error check..."
+	uv run python remove_vllm_error.py
 	@echo "Starting training..."
 	chmod +x train_agent.sh
 	WANDB_API_KEY=$(WANDB_API_KEY) ./train_agent.sh
