@@ -115,4 +115,5 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --eps_clip 0.1 \
    --ptx_coef 0.13 \
    --aux_loss_coef 0.001 \
+   --advantage_estimator $ADVANTAGE_ESTIMATOR \
    --policy_loss_type gspo

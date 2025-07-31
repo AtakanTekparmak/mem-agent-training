@@ -11,6 +11,6 @@
     "critic_learning_rate": "2e-5",
     "num_episodes": 8,
     "thoughts_min_length": 512,
-    "advantage_estimator": "dr_grpo"
+    "advantage_estimator": "group_norm"
   }
 } 
