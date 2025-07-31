@@ -3,6 +3,10 @@ set -x
 export PATH="$(dirname "$0")/.venv/bin:$PATH"
 export NINJA="$(dirname "$0")/.venv/bin/ninja"
 
+# NCCL stuff
+export NCCL_ASYNC_ERROR_HANDLING=1
+export NCCL_BLOCKING_WAIT=1          
+export NCCL_TIMEOUT=900
 
 # Read config from JSON file
 CONFIG_FILE="$(dirname "$0")/config.json"
@@ -60,7 +64,7 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --actor_num_gpus_per_node 8 \
    --vllm_num_engines 2 \
    --vllm_tensor_parallel_size 4 \
-   --vllm_gpu_memory_utilization 0.20 \
+   --vllm_gpu_memory_utilization 0.30 \
    --colocate_all_models \
    --init_kl_coef $INIT_KL_COEF \
    --kl_target $KL_TARGET \
@@ -73,9 +77,9 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --ckpt_path $CKPT_PATH \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
-   --train_batch_size 32 \
+   --train_batch_size 8 \
    --micro_rollout_batch_size 2 \
-   --rollout_batch_size 32 \
+   --rollout_batch_size 8 \
    --n_samples_per_prompt 4 \
    --max_epochs $MAX_EPOCHS \
    --prompt_max_len 4096 \
