@@ -76,9 +76,9 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --save_path $SAVE_PATH \
    --ckpt_path $CKPT_PATH \
    --save_hf_ckpt \
-   --micro_train_batch_size 2 \
+   --micro_train_batch_size 1 \
    --train_batch_size 8 \
-   --micro_rollout_batch_size 2 \
+   --micro_rollout_batch_size 1 \
    --rollout_batch_size 8 \
    --n_samples_per_prompt 4 \
    --max_epochs $MAX_EPOCHS \
