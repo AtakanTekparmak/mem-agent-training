@@ -71,7 +71,6 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --agent_func_path training/agent_func.py \
    --save_path $SAVE_PATH \
    --ckpt_path $CKPT_PATH \
-   --advantage_estimator $ADVANTAGE_ESTIMATOR \
    --save_hf_ckpt \
    --micro_train_batch_size 2 \
    --train_batch_size 32 \
@@ -103,4 +102,6 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --packing_samples --flash_attn \
    --wandb_project obsidian-retrieval-openrlhf \
    --eps_clip 0.1 \
-   --ptx_coef 0.13 
+   --ptx_coef 0.13 \
+   --aux_loss_coef 0.001 \
+   --policy_loss_type gspo
