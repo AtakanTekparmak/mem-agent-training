@@ -22,7 +22,15 @@ def load_static_memory_from_example_data(memory_dir: pathlib.Path) -> StaticMemo
             # Convert mem_id to memory_id to match StaticMemory schema
             if "mem_id" in data:
                 data["memory_id"] = data.pop("mem_id")
-            return StaticMemory.model_validate(data)
+            
+            # Compatibility layer for Pydantic v1 vs v2
+            if hasattr(StaticMemory, 'model_validate'):
+                # Pydantic v2
+                return StaticMemory.model_validate(data)
+            else:
+                # Pydantic v1
+                return StaticMemory.parse_obj(data)
+            
     except Exception as e:
         raise ValueError(f"Error loading static memory from {base_memory_path}: {e}")
 
@@ -75,7 +83,13 @@ def load_static_memory(path: str) -> StaticMemory:
     """
     try:
         with open(path, "r") as f:
-            return StaticMemory.model_validate_json(f.read())
+            # Compatibility layer for Pydantic v1 vs v2
+            if hasattr(StaticMemory, 'model_validate_json'):
+                # Pydantic v2
+                return StaticMemory.model_validate_json(f.read())
+            else:
+                # Pydantic v1
+                return StaticMemory.parse_raw(f.read())
     except FileNotFoundError:
         raise FileNotFoundError(f"Static memory file not found at {path}")
 

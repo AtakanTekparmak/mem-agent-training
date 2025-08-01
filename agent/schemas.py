@@ -36,6 +36,10 @@ class StaticMemory(BaseModel):
     user_md: str
     entities: list[EntityFile]
 
+    class Config:
+        # This allows the class to work with both v1 and v2
+        pass
+
     def instantiate(self, path: str):
         """
         Instantiate the static memory inside the memory path.
