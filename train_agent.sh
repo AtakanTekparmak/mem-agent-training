@@ -13,6 +13,10 @@ export NCCL_ASYNC_ERROR_HANDLING=1
 export NCCL_BLOCKING_WAIT=1
 export NCCL_TIMEOUT=900
 
+# OpenRLHF stuff
+export OPENRLHF_ASYNC_NUM_TASKS=128
+export OPENRLHF_ASYNC_QUEUE_SIZE=2
+
 # Read config from JSON file
 CONFIG_FILE="$(dirname "$0")/config.json"
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -91,7 +95,8 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --prompt_max_len 2048 \
    --max_samples 100000 \
    --generate_max_len 1024 \
-   --zero_stage 3 \
+   --zero_stage 2 \
+   --ds_tensor_parallel_size 8 \
    --bf16 \
    --actor_learning_rate $ACTOR_LR \
    --critic_learning_rate $CRITIC_LR \
@@ -116,4 +121,5 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --ptx_coef 0.13 \
    --aux_loss_coef 0.001 \
    --advantage_estimator $ADVANTAGE_ESTIMATOR \
+   --async_train \
    --policy_loss_type gspo
