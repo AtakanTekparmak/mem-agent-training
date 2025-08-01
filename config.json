@@ -1,6 +1,6 @@
 {
   "model": {
-    "name": "Qwen/Qwen3-30B-A3B-Instruct-2507"
+    "name": "Qwen/Qwen3-14B"
   },
   "hyperparameters": {
     "init_kl_coef": 0.1,
