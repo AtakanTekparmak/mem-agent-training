@@ -30,7 +30,7 @@ def load_static_memory_from_example_data(memory_dir: pathlib.Path) -> StaticMemo
             else:
                 # Pydantic v1
                 return StaticMemory.parse_obj(data)
-            
+
     except Exception as e:
         raise ValueError(f"Error loading static memory from {base_memory_path}: {e}")
 
