@@ -109,7 +109,6 @@ echo "  Hyperparameters: init_kl_coef=$INIT_KL_COEF, kl_target=$KL_TARGET, max_e
    --packing_samples \
    --vllm_sync_backend nccl \
    --enforce_eager \
-   --vllm_enable_sleep \
    --deepspeed_enable_sleep \
    --use_wandb True \
    --num_episodes $NUM_EPISODES \
