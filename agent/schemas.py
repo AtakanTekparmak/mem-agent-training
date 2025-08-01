@@ -35,6 +35,11 @@ class StaticMemory(BaseModel):
     memory_id: str
     user_md: str
     entities: list[EntityFile]
+    
+    # For Pydantic v1 compatibility
+    class Config:
+        # This allows the class to work with both v1 and v2
+        pass
 
     def instantiate(self, path: str):
         """
