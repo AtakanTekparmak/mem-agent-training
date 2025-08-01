@@ -41,6 +41,10 @@ class StaticMemory(BaseModel):
         # This allows the class to work with both v1 and v2
         pass
 
+    class Config:
+        # This allows the class to work with both v1 and v2
+        pass
+
     def instantiate(self, path: str):
         """
         Instantiate the static memory inside the memory path.
